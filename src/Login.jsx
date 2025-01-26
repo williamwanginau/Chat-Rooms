@@ -1,9 +1,19 @@
 import { toast } from "react-toastify";
 import { TextField, Container, Button } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
+
 function Login() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser, navigate]);
 
   const handleLogin = () => {
     if (!username.trim()) {
@@ -22,7 +32,9 @@ function Login() {
 
     const existingUser = users?.find((user) => user.username === username);
     if (existingUser) {
+      localStorage.setItem("currentUser", JSON.stringify(existingUser));
       toast.success("Login successful");
+      navigate("/");
       return;
     }
 
@@ -36,6 +48,8 @@ function Login() {
 
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("currentUser", JSON.stringify(newUser));
+    navigate("/");
     toast.success("Login successful");
   };
 

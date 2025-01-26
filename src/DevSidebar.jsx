@@ -54,23 +54,25 @@ const DevSidebar = () => {
     </Box>
   );
 
-  return (
-    <>
-      <Drawer anchor="left" open={open} onClose={toggleDrawer}>
-        {DrawerList}
-      </Drawer>
-      <Button
-        style={{
-          position: "absolute",
-          bottom: "10px",
-          right: "10px",
-        }}
-        onClick={toggleDrawer}
-      >
-        Dev funcs
-      </Button>
-    </>
-  );
+  if (import.meta.env.DEV) {
+    return (
+      <>
+        <Drawer anchor="left" open={open} onClose={toggleDrawer}>
+          {DrawerList}
+        </Drawer>
+        <Button
+          style={{
+            position: "absolute",
+            bottom: "10px",
+            right: "10px",
+          }}
+          onClick={toggleDrawer}
+        >
+          Dev funcs
+        </Button>
+      </>
+    );
+  }
 };
 
 export default DevSidebar;
