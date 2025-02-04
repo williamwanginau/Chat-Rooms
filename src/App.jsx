@@ -1,25 +1,19 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { Button } from "@mui/material";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import DevSidebar from "./DevSidebar.jsx";
+
+import Login from "./Login.jsx";
+import Home from "./Home.jsx";
+
 function App() {
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!currentUser) {
-      navigate("/login");
-    }
-  }, [currentUser, navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    navigate("/login");
-  };
-
   return (
     <div>
-      Hello, {currentUser.username}
-      <Button onClick={handleLogout}>Logout</Button>
+      <BrowserRouter>
+        <DevSidebar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
