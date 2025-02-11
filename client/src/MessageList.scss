@@ -21,8 +21,8 @@
     }
 
     &.other {
-      flex-direction: row;
-      justify-content: flex-start;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
       .message-list-item {
         background-color: #e4e6eb;
         color: black;

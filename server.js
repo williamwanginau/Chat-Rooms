@@ -11,7 +11,11 @@ wss.on("connection", (ws) => {
   ws.onmessage = (event) => {
     console.log(`Received message: ${event.data}`);
 
-    ws.send(event.data);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(event.data);
+      }
+    });
   };
 
   ws.on("close", () => {

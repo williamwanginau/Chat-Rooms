@@ -8,7 +8,6 @@ const WS_URL = import.meta.env.VITE_WS_URL;
 
 const Home = () => {
   const navigate = useNavigate();
-  console.log(import.meta.env.VITE_WS_URL);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [messages, setMessages] = useState([]);
 
@@ -28,15 +27,20 @@ const Home = () => {
   }, [ws]);
 
   const handleSendMessage = (e) => {
+    if (e.target.value.trim() === "") return;
+
     const message = {
       messageId: uuidv4(),
       sender: currentUser.id,
+      senderName: currentUser.username,
       message: e.target.value,
       timestamp: new Date().toISOString(),
       type: "text",
     };
-    ws.send(JSON.stringify(message));
+
     e.target.value = "";
+
+    ws.send(JSON.stringify(message));
   };
 
   useEffect(() => {
@@ -54,10 +58,10 @@ const Home = () => {
         label="Multiline"
         multiline
         rows={4}
-        defaultValue="Default Value"
         style={{ height: "10vh", width: "100%" }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.preventDefault();
             handleSendMessage(e);
           }
         }}
