@@ -1,20 +1,6 @@
 import PropTypes from "prop-types";
 import "./MessageList.scss";
-import { useEffect, useRef } from "react";
-
 const MessageList = ({ messages, currentUser }) => {
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (messages[messages.length - 1]?.sender === currentUser.id) {
-      scrollToBottom();
-    }
-  }, [messages, currentUser]);
-
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString("zh-TW", {
@@ -46,7 +32,6 @@ const MessageList = ({ messages, currentUser }) => {
           </div>
         );
       })}
-      <div ref={messagesEndRef} />
     </div>
   );
 };

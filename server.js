@@ -11,9 +11,18 @@ wss.on("connection", (ws) => {
   ws.onmessage = (event) => {
     console.log(`Received message: ${event.data}`);
 
+    const message = JSON.parse(event.data);
+
+    const enrichedMessage = {
+      ...message,
+      serverTimestamp: new Date().toISOString(),
+      status: "delivered",
+      // sequence: generateSequenceNumber(),
+    };
+
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(event.data);
+        client.send(JSON.stringify(enrichedMessage));
       }
     });
   };

@@ -31,11 +31,22 @@ const Home = () => {
 
     const message = {
       messageId: uuidv4(),
-      sender: currentUser.id,
-      senderName: currentUser.username,
+      sender: {
+        id: currentUser.id,
+        name: currentUser.username,
+        avatar: currentUser.avatar || null,
+      },
       message: e.target.value,
-      timestamp: new Date().toISOString(),
-      type: "text",
+      clientTimestamp: new Date().toISOString(),
+      status: "sent",
+      room: {
+        id: "1314520",
+        type: "group",
+      },
+      metadata: {
+        device: navigator.userAgent,
+        clientVersion: "1.0.0",
+      },
     };
 
     e.target.value = "";
