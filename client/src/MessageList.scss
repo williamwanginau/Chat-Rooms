@@ -1,0 +1,44 @@
+// 設定訊息列表的樣式
+.message-list {
+  height: 70vh;
+  padding: 20px;
+  overflow-y: auto;
+
+  .message-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+
+    &.self {
+      flex-direction: row;
+      justify-content: flex-end;
+
+      .message-list-item {
+        background-color: #0084ff;
+        color: white;
+      }
+    }
+
+    &.other {
+      flex-direction: row;
+      justify-content: flex-start;
+      .message-list-item {
+        background-color: #e4e6eb;
+        color: black;
+        align-self: flex-start;
+      }
+    }
+
+    .message-list-item {
+      padding: 8px 12px;
+      border-radius: 18px;
+      max-width: 60%;
+    }
+
+    .message-list-item-timestamp {
+      font-size: 12px;
+      color: #65676b;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TextField } from "@mui/material";
 import ResponsiveAppBar from "./AppBar.jsx";
 import MessageList from "./MessageList.jsx";
@@ -10,6 +10,7 @@ const Home = () => {
   const navigate = useNavigate();
   console.log(import.meta.env.VITE_WS_URL);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const [messages, setMessages] = useState([]);
 
   const ws = useMemo(() => new WebSocket(WS_URL), []);
 
@@ -20,7 +21,9 @@ const Home = () => {
 
     ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
-      console.log(messageData);
+      if (messageData.type === "text") {
+        setMessages((prevMessages) => [...prevMessages, messageData]);
+      }
     };
   }, [ws]);
 
@@ -33,6 +36,7 @@ const Home = () => {
       type: "text",
     };
     ws.send(JSON.stringify(message));
+    e.target.value = "";
   };
 
   useEffect(() => {
@@ -44,7 +48,7 @@ const Home = () => {
   return (
     <div>
       <ResponsiveAppBar currentUser={currentUser} />
-      <MessageList />
+      <MessageList messages={messages} currentUser={currentUser} />
       <TextField
         id="outlined-multiline-static"
         label="Multiline"
@@ -52,7 +56,11 @@ const Home = () => {
         rows={4}
         defaultValue="Default Value"
         style={{ height: "10vh", width: "100%" }}
-        onKeyDown={handleSendMessage}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleSendMessage(e);
+          }
+        }}
       />
     </div>
   );
