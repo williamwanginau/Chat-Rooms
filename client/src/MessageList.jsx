@@ -12,21 +12,22 @@ const MessageList = ({ messages, currentUser }) => {
   return (
     <div className="message-list">
       {messages.map((message) => {
-        const isSelf = currentUser.id === message.sender;
+        const isSelf = currentUser.id === message.sender.id;
+
         return (
           <div
             key={message.messageId}
             className={`message-row ${isSelf ? "self" : "other"}`}
           >
             <div className="message-list-item-timestamp">
-              {formatDate(message.timestamp)}
+              {formatDate(message.clientTimestamp)}
             </div>
             <div className="message-list-item">
               <div>{message.message}</div>
             </div>
             {!isSelf && (
               <div className="message-list-item-sender">
-                {message.senderName}
+                {message.sender.name}
               </div>
             )}
           </div>
