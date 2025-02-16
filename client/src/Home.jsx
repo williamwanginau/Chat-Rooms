@@ -11,33 +11,34 @@ const Home = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [messages, setMessages] = useState([]);
-  const [currentRoomId, setCurrentRoomId] = useState("sports");
+  const [currentRoomId, setCurrentRoomId] = useState("1234567");
 
   const ws = useMemo(() => new WebSocket(WS_URL), []);
 
-  const handleRoomSelect = useCallback(
-    (roomId) => {
-      setCurrentRoomId(roomId);
-      setMessages([]);
+  const handleRoomSelect = useCallback((roomId) => {
+    setCurrentRoomId(roomId);
+    setMessages([]);
+  }, []);
 
-      const joinMessage = {
-        messageId: uuidv4(),
-        type: "join",
-        sender: {
-          id: currentUser.id,
-          name: currentUser.username,
-        },
-        room: {
-          id: currentRoomId,
-          type: "group",
-        },
-        clientTimestamp: new Date().toISOString(),
-      };
+  useEffect(() => {
+    const joinMessage = {
+      messageId: uuidv4(),
+      type: "ROOM_CHANGE",
+      sender: {
+        id: currentUser.id,
+        name: currentUser.username,
+      },
+      room: {
+        id: currentRoomId,
+        type: "group",
+      },
+      clientTimestamp: new Date().toISOString(),
+    };
 
+    if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(joinMessage));
-    },
-    [currentUser, ws, currentRoomId]
-  );
+    }
+  }, [currentRoomId, currentUser, ws]);
 
   useEffect(() => {
     ws.onopen = () => {
@@ -50,9 +51,7 @@ const Home = () => {
 
       if (messageData.type === "history") {
         setMessages(messageData.messages);
-      }
-
-      if (messageData.type === "message") {
+      } else {
         setMessages((prevMessages) => [...prevMessages, messageData]);
       }
     };
