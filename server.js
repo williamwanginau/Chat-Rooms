@@ -1,12 +1,25 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const WebSocket = require("ws");
 const PORT = 3000;
 const WS_PORT = 3001;
 const wss = new WebSocket.Server({ port: WS_PORT });
+app.use(cors());
 
 const rooms = new Map();
 const roomHistory = new Map();
+
+const MESSAGE_TYPES = {
+  ROOM_CHANGE: "ROOM_CHANGE",
+  MESSAGE: "MESSAGE",
+};
+
+app.get("/api/room/:roomId/history", (req, res) => {
+  const roomId = req.params.roomId;
+  const roomHistory1 = roomHistory?.get(roomId) || [];
+  res.json(roomHistory1);
+});
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -14,11 +27,11 @@ wss.on("connection", (ws) => {
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
 
-    if (message.type === "ROOM_CHANGE") {
+    if (message.type === MESSAGE_TYPES.ROOM_CHANGE) {
       handleRoomChange(message, ws);
     }
 
-    if (message.type === "message") {
+    if (message.type === MESSAGE_TYPES.MESSAGE) {
       handleMessage(message, ws);
     }
   };

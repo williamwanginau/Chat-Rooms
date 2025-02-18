@@ -6,9 +6,11 @@ import MessageList from "./MessageList.jsx";
 import { v4 as uuidv4 } from "uuid";
 import RoomList from "./RoomList";
 const WS_URL = import.meta.env.VITE_WS_URL;
+import MESSAGE_TYPES from "../../messageTypes.js";
 
 const Home = () => {
   const navigate = useNavigate();
+
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [messages, setMessages] = useState([]);
   const [currentRoomId, setCurrentRoomId] = useState("sport");
@@ -20,9 +22,18 @@ const Home = () => {
       if (currentRoomId === roomId) return;
       setCurrentRoomId(roomId);
       setMessages([]);
+      fetchRoomHistory(roomId);
     },
     [currentRoomId]
   );
+
+  const fetchRoomHistory = async (roomId) => {
+    const response = await fetch(
+      `http://127.0.0.1:3000/api/room/${roomId}/history`
+    );
+    const data = await response.json();
+    setMessages(data);
+  };
 
   useEffect(() => {
     const ws = new WebSocket(WS_URL);
@@ -129,7 +140,7 @@ const Home = () => {
 function buildRoomChangeMessage(roomId, user) {
   return {
     messageId: uuidv4(),
-    type: "ROOM_CHANGE",
+    type: MESSAGE_TYPES.ROOM_CHANGE,
     sender: {
       id: user.id,
       name: user.username,
@@ -157,7 +168,7 @@ function buildMessage(text, user, roomId) {
       device: navigator.userAgent,
       clientVersion: "1.0.0",
     },
-    type: "message",
+    type: MESSAGE_TYPES.MESSAGE,
   };
 }
 
