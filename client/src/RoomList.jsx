@@ -15,14 +15,14 @@ import {
 } from "@mui/material";
 
 const DEFAULT_ROOMS = [
-  { id: "1234567", name: "Sports Room", description: "Discuss sports events" },
+  { id: "sport", name: "Sports Room", description: "Discuss sports events" },
   {
-    id: "77777777",
+    id: "finance",
     name: "Finance Room",
     description: "Share investment topics",
   },
   {
-    id: "889988899",
+    id: "tech",
     name: "Tech Room",
     description: "Explore latest tech trends",
   },

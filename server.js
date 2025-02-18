@@ -6,6 +6,7 @@ const WS_PORT = 3001;
 const wss = new WebSocket.Server({ port: WS_PORT });
 
 const rooms = new Map();
+const roomHistory = new Map();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -29,20 +30,9 @@ wss.on("connection", (ws) => {
 
       if (rooms.get(ws.roomId).size === 0) {
         rooms.delete(ws.roomId);
-        messageHistory.delete(ws.roomId);
       }
     }
   });
-
-  if (ws.roomId && messageHistory.has(ws.roomId)) {
-    const historyMessages = messageHistory.get(ws.roomId);
-    ws.send(
-      JSON.stringify({
-        type: "history",
-        messages: historyMessages,
-      })
-    );
-  }
 });
 
 const handleRoomChange = (message, ws) => {
@@ -54,7 +44,7 @@ const handleRoomChange = (message, ws) => {
   const oldRoomId = ws.roomId;
   const newRoomId = message.room.id;
 
-  if (ws.roomId === newRoomId) {
+  if (oldRoomId === newRoomId) {
     console.log("User is already in this room, skip re-join logic.");
     return;
   }
@@ -99,13 +89,25 @@ const joinRoom = (ws, roomId) => {
 };
 
 const handleMessage = (message, ws) => {
+  if (!ws.roomId || !rooms.has(ws.roomId)) {
+    console.error("No valid room for this client. Message ignored.", message);
+    return;
+  }
+
+  const roomClients = rooms.get(ws.roomId);
+
   const enrichedMessage = {
     ...message,
     serverTimestamp: new Date().toISOString(),
     status: "delivered",
   };
 
-  const roomClients = rooms.get(ws.roomId);
+  if (!roomHistory.has(ws.roomId)) {
+    roomHistory.set(ws.roomId, []);
+  }
+
+  const historyMessages = roomHistory.get(ws.roomId);
+  historyMessages.push(enrichedMessage);
 
   roomClients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {

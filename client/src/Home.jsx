@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { TextField } from "@mui/material";
 import ResponsiveAppBar from "./AppBar.jsx";
 import MessageList from "./MessageList.jsx";
@@ -11,39 +11,30 @@ const Home = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [messages, setMessages] = useState([]);
-  const [currentRoomId, setCurrentRoomId] = useState("1234567");
+  const [currentRoomId, setCurrentRoomId] = useState("sport");
 
-  const ws = useMemo(() => new WebSocket(WS_URL), []);
+  const wsRef = useRef(null);
 
-  const handleRoomSelect = useCallback((roomId) => {
-    setCurrentRoomId(roomId);
-    setMessages([]);
-  }, []);
-
-  useEffect(() => {
-    const joinMessage = {
-      messageId: uuidv4(),
-      type: "ROOM_CHANGE",
-      sender: {
-        id: currentUser.id,
-        name: currentUser.username,
-      },
-      room: {
-        id: currentRoomId,
-        type: "group",
-      },
-      clientTimestamp: new Date().toISOString(),
-    };
-
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(joinMessage));
-    }
-  }, [currentRoomId, currentUser, ws]);
+  const handleRoomSelect = useCallback(
+    (roomId) => {
+      if (currentRoomId === roomId) return;
+      setCurrentRoomId(roomId);
+      setMessages([]);
+    },
+    [currentRoomId]
+  );
 
   useEffect(() => {
+    const ws = new WebSocket(WS_URL);
+    wsRef.current = ws;
+
     ws.onopen = () => {
       console.log("Connected to server");
-      handleRoomSelect(currentRoomId);
+
+      if (currentRoomId) {
+        const joinMessage = buildRoomChangeMessage(currentRoomId, currentUser);
+        ws.send(JSON.stringify(joinMessage));
+      }
     };
 
     ws.onmessage = (event) => {
@@ -55,31 +46,45 @@ const Home = () => {
         setMessages((prevMessages) => [...prevMessages, messageData]);
       }
     };
-  }, [ws, currentRoomId, currentUser, handleRoomSelect]);
+
+    ws.onclose = () => {
+      console.log("Disconnected from server");
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      ws.close();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.log("WebSocket is not open");
+      return;
+    }
+
+    if (ws.readyState === WebSocket.OPEN) {
+      const joinMessage = buildRoomChangeMessage(currentRoomId, currentUser);
+      ws.send(JSON.stringify(joinMessage));
+    }
+  }, [currentRoomId, currentUser]);
 
   const handleSendMessage = (e) => {
-    if (e.target.value.trim() === "") return;
+    const text = e.target.value;
+    if (text.trim() === "") return;
 
-    const message = {
-      messageId: uuidv4(),
-      sender: {
-        id: currentUser.id,
-        name: currentUser.username,
-        avatar: currentUser.avatar || null,
-      },
-      message: e.target.value,
-      clientTimestamp: new Date().toISOString(),
-      status: "sent",
-      room: {
-        id: currentRoomId,
-        type: "group",
-      },
-      metadata: {
-        device: navigator.userAgent,
-        clientVersion: "1.0.0",
-      },
-      type: "message",
-    };
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.log("WebSocket is not open");
+      return;
+    }
+
+    const message = buildMessage(text, currentUser, currentRoomId);
 
     e.target.value = "";
 
@@ -120,5 +125,40 @@ const Home = () => {
     </div>
   );
 };
+
+function buildRoomChangeMessage(roomId, user) {
+  return {
+    messageId: uuidv4(),
+    type: "ROOM_CHANGE",
+    sender: {
+      id: user.id,
+      name: user.username,
+    },
+    room: {
+      id: roomId,
+      type: "group",
+    },
+    clientTimestamp: new Date().toISOString(),
+  };
+}
+
+function buildMessage(text, user, roomId) {
+  return {
+    messageId: uuidv4(),
+    message: text,
+    sender: user,
+    clientTimestamp: new Date().toISOString(),
+    status: "sent",
+    room: {
+      id: roomId,
+      type: "group",
+    },
+    metadata: {
+      device: navigator.userAgent,
+      clientVersion: "1.0.0",
+    },
+    type: "message",
+  };
+}
 
 export default Home;
