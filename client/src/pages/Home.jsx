@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { TextField } from "@mui/material";
-import ResponsiveAppBar from "./AppBar.jsx";
-import MessageList from "./MessageList.jsx";
+import { TextField, Button } from "@mui/material";
+import ResponsiveAppBar from "../AppBar.jsx";
+import Composer from "../components/Composer.jsx";
 import { v4 as uuidv4 } from "uuid";
-import RoomList from "./RoomList";
+import RoomList from "../RoomList.jsx";
 const WS_URL = import.meta.env.VITE_WS_URL;
-import MESSAGE_TYPES from "../../messageTypes.js";
+import MESSAGE_TYPES from "../../../messageTypes.js";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const Home = () => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [messages, setMessages] = useState([]);
   const [currentRoomId, setCurrentRoomId] = useState("sport");
+  const [isRoomListVisible, setIsRoomListVisible] = useState(true);
 
   const wsRef = useRef(null);
 
@@ -108,17 +109,39 @@ const Home = () => {
     }
   }, [currentUser, navigate]);
 
+  const toggleRoomList = () => {
+    setIsRoomListVisible((prev) => !prev);
+  };
+
   return (
     <div style={{ display: "flex" }}>
-      <div style={{ width: "250px", borderRight: "1px solid #ddd" }}>
-        <RoomList
-          onRoomSelect={handleRoomSelect}
-          currentRoomId={currentRoomId}
-        />
-      </div>
+      <Button
+        onClick={toggleRoomList}
+        size="small"
+        style={{
+          position: "absolute",
+          bottom: "10px",
+          left: "10px",
+          padding: "2px 5px",
+          fontSize: "10px",
+          minWidth: "auto",
+          backgroundColor: "#f0f0f0",
+          zIndex: 1000,
+        }}
+      >
+        {isRoomListVisible ? "Hide Room List" : "Show Room List"}
+      </Button>
+      {isRoomListVisible && (
+        <div style={{ width: "250px", borderRight: "1px solid #ddd" }}>
+          <RoomList
+            onRoomSelect={handleRoomSelect}
+            currentRoomId={currentRoomId}
+          />
+        </div>
+      )}
       <div style={{ flex: 1 }}>
         <ResponsiveAppBar currentUser={currentUser} />
-        <MessageList messages={messages} currentUser={currentUser} />
+        <Composer messages={messages} currentUser={currentUser} />
         <TextField
           id="outlined-multiline-static"
           label="Multiline"

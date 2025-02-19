@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
-import "./MessageList.scss";
-const MessageList = ({ messages, currentUser }) => {
+import "./Composer.scss";
+
+const Composer = ({ messages, currentUser }) => {
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString("zh-TW", {
@@ -37,9 +38,9 @@ const MessageList = ({ messages, currentUser }) => {
   );
 };
 
-MessageList.propTypes = {
+Composer.propTypes = {
   messages: PropTypes.array.isRequired,
   currentUser: PropTypes.object.isRequired,
 };
 
-export default MessageList;
+export default Composer;
