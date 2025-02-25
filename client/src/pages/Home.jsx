@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { TextField, Button } from "@mui/material";
 import ResponsiveAppBar from "../AppBar.jsx";
-import Composer from "../components/Composer.jsx";
+import ChatComposer from "./Chat/ChatComposer.jsx";
 import { v4 as uuidv4 } from "uuid";
 import RoomList from "../RoomList.jsx";
 const WS_URL = import.meta.env.VITE_WS_URL;
@@ -141,7 +141,7 @@ const Home = () => {
       )}
       <div style={{ flex: 1 }}>
         <ResponsiveAppBar currentUser={currentUser} />
-        <Composer messages={messages} currentUser={currentUser} />
+        <ChatComposer messages={messages} currentUser={currentUser} />
         <TextField
           id="outlined-multiline-static"
           label="Multiline"

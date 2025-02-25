@@ -1,15 +1,15 @@
 .primary-sidebar {
-    padding: 4px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 
     &__header {
         &-title {
             font-size: 14px;
             color: #666;
             padding: 0 12px;
-            margin: 0;
+            margin: 12px 0px;
         }
     }
 

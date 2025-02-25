@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DevSidebar from "./DevSidebar.jsx";
-import Chat from "./pages/Chat.jsx";
+import Chat from "./pages/Chat/ChatPage.jsx";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
 

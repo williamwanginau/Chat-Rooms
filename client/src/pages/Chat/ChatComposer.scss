@@ -1,0 +1,34 @@
+.chat-composer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 0 10px;
+  margin: 8px;
+  background-color: #fff;
+}
+
+.chat-composer__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 20px;
+}
+
+.chat-composer__icon-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.chat-composer__icon {
+  cursor: pointer;
+  color: #666;
+}
+
+.chat-composer__input:focus {
+  outline: none;
+}

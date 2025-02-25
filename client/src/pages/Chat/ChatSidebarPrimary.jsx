@@ -1,29 +1,15 @@
 import PropTypes from "prop-types";
-import "./PrimarySidebar.scss";
+import "./ChatSidebarPrimary.scss";
 
-const DEFAULT_ROOMS = [
-  { id: "sport", name: "Sports Room", description: "Discuss sports events" },
-  {
-    id: "finance",
-    name: "Finance Room",
-    description: "Share investment topics",
-  },
-  {
-    id: "tech",
-    name: "Tech Room",
-    description: "Explore latest tech trends",
-  },
-];
-
-const PrimarySidebar = ({ onRoomSelect, currentRoomId }) => {
+const PrimarySidebar = ({ onRoomSelect, currentRoomId, defaultRooms }) => {
   return (
     <div className="primary-sidebar">
       <div className="primary-sidebar__header">
-        <h2 className="primary-sidebar__title">My Chatroom</h2>
+        <p className="primary-sidebar__header-title">My Chatroom</p>
       </div>
 
       <div className="primary-sidebar__body">
-        {DEFAULT_ROOMS.map((room) => (
+        {defaultRooms.map((room) => (
           <div
             className={`primary-sidebar__item ${
               currentRoomId === room.id ? "primary-sidebar__item--active" : ""
@@ -45,6 +31,13 @@ const PrimarySidebar = ({ onRoomSelect, currentRoomId }) => {
 PrimarySidebar.propTypes = {
   onRoomSelect: PropTypes.func.isRequired,
   currentRoomId: PropTypes.string,
+  defaultRooms: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+    })
+  ).isRequired,
 };
 
 export default PrimarySidebar;

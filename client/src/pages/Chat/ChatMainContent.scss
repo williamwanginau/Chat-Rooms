@@ -1,8 +1,13 @@
-// 設定訊息列表的樣式
+.chat-main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .message-list {
-  height: 70vh;
   padding: 20px;
   overflow-y: auto;
+  height: calc(100% - 34px);
 
   .message-row {
     display: flex;
