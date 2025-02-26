@@ -102,6 +102,18 @@ const joinRoom = (ws, roomId) => {
 };
 
 const handleMessage = (message, ws) => {
+  if (!ws.roomId && message.roomId) {
+    console.log(`Setting client room ID to ${message.roomId} from message`);
+    ws.roomId = message.roomId;
+
+    if (!rooms.has(ws.roomId)) {
+      console.log(`Creating new room: ${ws.roomId}`);
+      rooms.set(ws.roomId, new Set());
+    }
+
+    rooms.get(ws.roomId).add(ws);
+  }
+
   if (!ws.roomId || !rooms.has(ws.roomId)) {
     console.error("No valid room for this client. Message ignored.", message);
     return;

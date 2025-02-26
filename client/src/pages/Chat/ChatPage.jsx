@@ -3,35 +3,90 @@ import ChatMainContent from "./ChatMainContent";
 import ChatSidebarSecondary from "./ChatSidebarSecondary";
 import ChatHeader from "./ChatHeader";
 import "./ChatPage.scss";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MESSAGE_TYPES from "../../../../messageTypes";
 import { v4 as uuidv4 } from "uuid";
+import PropTypes from "prop-types";
 
 const Chat = () => {
-  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [selectedRoomId, setSelectedRoomId] = useState("sport"); // Set default room
   const [messages, setMessages] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const wsRef = useRef(null);
+
+  const buildRoomChangeMessage = (roomId, user) => {
+    return {
+      type: MESSAGE_TYPES.ROOM_CHANGE,
+      roomId: roomId,
+      user: {
+        id: user.id,
+        name: user.username,
+      },
+      clientTimestamp: new Date().toISOString(),
+    };
+  };
 
   const handleRoomSelect = (roomId) => {
     setSelectedRoomId(roomId);
-    const roomChangeMessage = buildRoomChangeMessage(roomId, currentUser);
-    console.log("roomChangeMessage", roomChangeMessage);
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const roomChangeMessage = buildRoomChangeMessage(roomId, currentUser);
+      wsRef.current.send(JSON.stringify(roomChangeMessage));
+    }
+  };
+
+  const handleSendMessage = (messageData) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(messageData));
+    }
   };
 
   useEffect(() => {
-    const roomChangeMessage = buildRoomChangeMessage(
-      selectedRoomId,
-      currentUser
-    );
-    console.log("roomChangeMessage", roomChangeMessage);
-  }, [selectedRoomId, currentUser]);
+    const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8080";
+    wsRef.current = new WebSocket(WS_URL);
+
+    wsRef.current.onopen = () => {
+      console.log("WebSocket connected successfully");
+      if (selectedRoomId) {
+        const roomChangeMessage = buildRoomChangeMessage(
+          selectedRoomId,
+          currentUser
+        );
+        wsRef.current.send(JSON.stringify(roomChangeMessage));
+      }
+    };
+
+    wsRef.current.onmessage = (event) => {
+      const messageData = JSON.parse(event.data);
+      console.log("Received message:", messageData);
+
+      if (messageData.type === "history") {
+        setMessages(messageData.messages);
+      } else if (messageData.type === MESSAGE_TYPES.MESSAGE) {
+        setMessages((prevMessages) => [...prevMessages, messageData]);
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    wsRef.current.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   const DEFAULT_ROOMS = [
-    { id: "sport", name: "Sports Room", description: "Discuss sports events" },
+    { id: "sport", name: "Sports Room", description: "Discuss sports topics" },
     {
       id: "finance",
       name: "Finance Room",
-      description: "Share investment topics",
+      description: "Share investment insights",
     },
     {
       id: "tech",
@@ -44,50 +99,34 @@ const Chat = () => {
 
   return (
     <div className="chat-container">
-      <div className="chat-primary-sidebar">
-        <ChatSidebarPrimary
-          onRoomSelect={handleRoomSelect}
-          currentRoomId={selectedRoomId}
-          defaultRooms={DEFAULT_ROOMS}
-        />
-      </div>
+      <ChatSidebarPrimary
+        className="chat-primary-sidebar"
+        onRoomSelect={handleRoomSelect}
+        currentRoomId={selectedRoomId}
+        defaultRooms={DEFAULT_ROOMS}
+      />
       <div className="chat-content">
-        <div className="chat-header">
-          <ChatHeader
-            selectedRoom={selectedRoom}
-            onRoomSelect={handleRoomSelect}
-          />
-        </div>
+        <ChatHeader className="chat-header" selectedRoom={selectedRoom} />
         <div className="chat-main-content-container">
-          <div className="chat-main-content">
-            <ChatMainContent
-              selectedRoom={selectedRoom}
-              currentUser={currentUser}
-              messages={messages}
-            />
-          </div>
-          <div className="chat-secondary-sidebar">
-            <ChatSidebarSecondary />
-          </div>
+          <ChatMainContent
+            className="chat-main-content"
+            messages={messages}
+            currentUser={currentUser}
+            selectedRoom={selectedRoom}
+            onSendMessage={handleSendMessage}
+          />
+          <ChatSidebarSecondary className="chat-secondary-sidebar" />
         </div>
       </div>
     </div>
   );
 };
 
-function buildRoomChangeMessage(roomId, user) {
-  return {
-    messageId: uuidv4(),
-    type: MESSAGE_TYPES.ROOM_CHANGE,
-    sender: {
-      id: user.id,
-      name: user.username,
-    },
-    room: {
-      id: roomId,
-      type: "group",
-    },
-    clientTimestamp: new Date().toISOString(),
-  };
-}
+Chat.propTypes = {
+  messages: PropTypes.array.isRequired,
+  currentUser: PropTypes.object.isRequired,
+  selectedRoom: PropTypes.object,
+  onSendMessage: PropTypes.func,
+};
+
 export default Chat;

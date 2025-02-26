@@ -6,7 +6,7 @@ import Home from "./pages/Home.jsx";
 
 function App() {
   return (
-    <div>
+    <div style={{ height: "100%", width: "100%" }}>
       <BrowserRouter>
         <DevSidebar />
         <Routes>

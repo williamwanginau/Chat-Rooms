@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   FaMicrophone,
   FaPaperclip,
@@ -6,11 +7,31 @@ import {
   FaSmile,
   FaPaperPlane,
 } from "react-icons/fa";
+import { v4 as uuidv4 } from "uuid";
+import MESSAGE_TYPES from "../../../../messageTypes";
 
 import "./ChatComposer.scss";
 
-export default function ChatComposer() {
+export default function ChatComposer({
+  currentUser,
+  selectedRoom,
+  onSendMessage,
+}) {
   const [message, setMessage] = useState("");
+
+  const buildChatMessage = (messageText, user, roomId) => {
+    return {
+      type: MESSAGE_TYPES.MESSAGE,
+      messageId: uuidv4(),
+      message: messageText,
+      sender: {
+        id: user.id,
+        name: user.username,
+      },
+      roomId: roomId,
+      clientTimestamp: new Date().toISOString(),
+    };
+  };
 
   const handleChange = (e) => {
     setMessage(e.target.value);
@@ -18,14 +39,24 @@ export default function ChatComposer() {
 
   const handleSend = () => {
     if (message.trim()) {
-      // 在這裡處理送出邏輯，例如呼叫 API
-      console.log("Send message:", message);
+      const messageData = buildChatMessage(
+        message,
+        currentUser,
+        selectedRoom?.id
+      );
+
+      if (onSendMessage) {
+        onSendMessage(messageData);
+      }
+
+      console.log("Send message:", messageData);
       setMessage("");
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      e.preventDefault();
       handleSend();
     }
   };
@@ -35,7 +66,7 @@ export default function ChatComposer() {
       <input
         className="chat-composer__input"
         type="text"
-        placeholder="Message General"
+        placeholder={`Message ${selectedRoom?.name || "General"}`}
         value={message}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -50,3 +81,9 @@ export default function ChatComposer() {
     </div>
   );
 }
+
+ChatComposer.propTypes = {
+  currentUser: PropTypes.object.isRequired,
+  selectedRoom: PropTypes.object,
+  onSendMessage: PropTypes.func,
+};
