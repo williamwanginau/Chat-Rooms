@@ -1,23 +1,25 @@
-import ChatSidebarPrimary from "./ChatSidebarPrimary";
-import ChatMainContent from "./ChatMainContent";
-import ChatSidebarSecondary from "./ChatSidebarSecondary";
-import ChatHeader from "./ChatHeader";
+import RoomsList from "./RoomsList";
+import MessagesList from "./MessagesList";
+import MembersList from "./MembersList";
+import RoomHeader from "./RoomHeader";
 import "./ChatPage.scss";
 import { useState, useEffect, useRef } from "react";
-import MESSAGE_TYPES from "../../../../messageTypes";
-import { v4 as uuidv4 } from "uuid";
+import MESSAGE_TYPES from "../../../../messageTypes.json";
 import PropTypes from "prop-types";
 
 const Chat = () => {
-  const [selectedRoomId, setSelectedRoomId] = useState("sport"); // Set default room
+  const [selectedRoomId, setSelectedRoomId] = useState("sport");
   const [messages, setMessages] = useState([]);
+  const [roomUsers, setRoomUsers] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const wsRef = useRef(null);
 
   const buildRoomChangeMessage = (roomId, user) => {
     return {
       type: MESSAGE_TYPES.ROOM_CHANGE,
-      roomId: roomId,
+      room: {
+        id: roomId,
+      },
       user: {
         id: user.id,
         name: user.username,
@@ -32,6 +34,26 @@ const Chat = () => {
       const roomChangeMessage = buildRoomChangeMessage(roomId, currentUser);
       wsRef.current.send(JSON.stringify(roomChangeMessage));
     }
+
+    const loadRoomHistory = async () => {
+      const response = await fetch(
+        `http://localhost:3000/api/room/${roomId}/history`
+      );
+      const data = await response.json();
+      setMessages(data);
+    };
+
+    const loadRoomUsers = async () => {
+      const response = await fetch(
+        `http://localhost:3000/api/room/${roomId}/users`
+      );
+
+      const data = await response.json();
+      setRoomUsers(data);
+    };
+
+    loadRoomHistory();
+    loadRoomUsers();
   };
 
   const handleSendMessage = (messageData) => {
@@ -46,6 +68,14 @@ const Chat = () => {
 
     wsRef.current.onopen = () => {
       console.log("WebSocket connected successfully");
+
+      wsRef.current.send(
+        JSON.stringify({
+          type: MESSAGE_TYPES.USER_INFO,
+          user: currentUser,
+        })
+      );
+
       if (selectedRoomId) {
         const roomChangeMessage = buildRoomChangeMessage(
           selectedRoomId,
@@ -98,24 +128,32 @@ const Chat = () => {
   const selectedRoom = DEFAULT_ROOMS.find((room) => room.id === selectedRoomId);
 
   return (
-    <div className="chat-container">
-      <ChatSidebarPrimary
-        className="chat-primary-sidebar"
-        onRoomSelect={handleRoomSelect}
-        currentRoomId={selectedRoomId}
-        defaultRooms={DEFAULT_ROOMS}
-      />
-      <div className="chat-content">
-        <ChatHeader className="chat-header" selectedRoom={selectedRoom} />
-        <div className="chat-main-content-container">
-          <ChatMainContent
-            className="chat-main-content"
-            messages={messages}
-            currentUser={currentUser}
-            selectedRoom={selectedRoom}
-            onSendMessage={handleSendMessage}
-          />
-          <ChatSidebarSecondary className="chat-secondary-sidebar" />
+    <div className="chat">
+      <div className="chat__sidebar">
+        <RoomsList
+          className="chat__rooms"
+          onRoomSelect={handleRoomSelect}
+          currentRoomId={selectedRoomId}
+          defaultRooms={DEFAULT_ROOMS}
+        />
+      </div>
+      <div className="chat__main">
+        <RoomHeader className="chat__header" selectedRoom={selectedRoom} />
+        <div className="chat__content">
+          <div className="chat__messages">
+            <MessagesList
+              messages={messages}
+              currentUser={currentUser}
+              selectedRoom={selectedRoom}
+              onSendMessage={handleSendMessage}
+            />
+          </div>
+          <div className="chat__members">
+            <MembersList
+              roomUsers={roomUsers}
+              currentUserId={currentUser?.id}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -123,8 +161,8 @@ const Chat = () => {
 };
 
 Chat.propTypes = {
-  messages: PropTypes.array.isRequired,
-  currentUser: PropTypes.object.isRequired,
+  messages: PropTypes.array,
+  currentUser: PropTypes.object,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,
 };

@@ -8,11 +8,11 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
-import MESSAGE_TYPES from "../../../../messageTypes";
+import MESSAGE_TYPES from "../../../../messageTypes.json";
 
-import "./ChatComposer.scss";
+import "./MessageComposer.scss";
 
-export default function ChatComposer({
+export default function MessageComposer({
   currentUser,
   selectedRoom,
   onSendMessage,
@@ -28,7 +28,9 @@ export default function ChatComposer({
         id: user.id,
         name: user.username,
       },
-      roomId: roomId,
+      room: {
+        id: roomId,
+      },
       clientTimestamp: new Date().toISOString(),
     };
   };
@@ -82,7 +84,7 @@ export default function ChatComposer({
   );
 }
 
-ChatComposer.propTypes = {
+MessageComposer.propTypes = {
   currentUser: PropTypes.object.isRequired,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,

@@ -1,53 +1,79 @@
 :root {
     --border-color: #e0e0e0;
     --background-color: #f8f8f8;
-    --sidebar-width: 200px;
+    --sidebar-width: 250px;
     --header-height: 50.5px;
 }
 
-.chat-container {
+.chat {
     display: flex;
-    flex-direction: row;
     height: 100vh;
+    width: 100%;
     overflow: hidden;
+
+    &__sidebar {
+        width: var(--sidebar-width);
+        border-right: 1px solid var(--border-color);
+    }
+
+    &__rooms {
+        height: 100%;
+    }
+
+    &__main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    &__header {
+        border-bottom: 1px solid var(--border-color);
+        height: var(--header-height);
+    }
+
+    &__content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    &__messages {
+        flex: 1;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    &__members {
+        width: var(--sidebar-width);
+        border-left: 1px solid var(--border-color);
+        overflow: hidden;
+    }
 }
 
-.chat-primary-sidebar {
-    flex: 1;
-    background-color: var(--background-color);
-    height: 100%;
-    border-right: 1px solid var(--border-color);
-    max-width: var(--sidebar-width);
-    overflow-y: auto;
+/* 响应式设计 */
+@media (max-width: 992px) {
+    :root {
+        --sidebar-width: 200px;
+    }
 }
 
-.chat-header {
-    background-color: var(--background-color);
-    height: var(--header-height);
-    border-bottom: 1px solid var(--border-color);
+@media (max-width: 768px) {
+    .chat {
+        &__members {
+            width: 180px;
+        }
+    }
 }
 
-.chat-main-content {
-    flex: 2;
-    height: 100%;
-    background-color: var(--background-color);
-    border-right: 1px solid var(--border-color);
-}
+@media (max-width: 576px) {
+    .chat {
+        &__sidebar {
+            display: none;
+        }
 
-.chat-secondary-sidebar {
-    flex: 1;
-    height: 100%;
-    background-color: var(--background-color);
-}
-
-.chat-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.chat-main-content-container {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
+        &__members {
+            display: none;
+        }
+    }
 }

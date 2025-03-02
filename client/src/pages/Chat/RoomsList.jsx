@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import "./ChatSidebarPrimary.scss";
+import "./RoomsList.scss";
 
 const PrimarySidebar = ({ onRoomSelect, currentRoomId, defaultRooms }) => {
   return (

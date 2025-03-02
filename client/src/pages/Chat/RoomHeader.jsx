@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
-import "./ChatHeader.scss";
+import "./RoomHeader.scss";
 
-const ChatHeader = ({ className, selectedRoom }) => {
+const RoomHeader = ({ className, selectedRoom }) => {
   return (
     <div className={`chat-header-container ${className}`}>
       <h3>{selectedRoom?.name}</h3>
@@ -9,9 +9,9 @@ const ChatHeader = ({ className, selectedRoom }) => {
   );
 };
 
-ChatHeader.propTypes = {
+RoomHeader.propTypes = {
   className: PropTypes.string,
   selectedRoom: PropTypes.object,
 };
 
-export default ChatHeader;
+export default RoomHeader;

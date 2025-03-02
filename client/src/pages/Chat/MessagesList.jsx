@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import "./ChatMainContent.scss";
-import ChatComposer from "./ChatComposer";
+import "./MessagesList.scss";
+import MessageComposer from "./MessageComposer";
 import { useEffect, useRef } from "react";
 
 const ChatMainContent = ({
@@ -51,7 +51,6 @@ const ChatMainContent = ({
     }
   };
 
-  // 按日期分組消息
   const groupMessagesByDate = (msgs) => {
     const groups = {};
 
@@ -78,7 +77,7 @@ const ChatMainContent = ({
   return (
     <div className="chat-main-content">
       <div className="message-list" ref={messageListRef}>
-        {messageGroups.map((group, groupIndex) => (
+        {messageGroups.map((group) => (
           <div key={group.date} className="message-day-group">
             <div className="date-divider">
               <span className="date-label">{group.displayDate}</span>
@@ -133,10 +132,10 @@ const ChatMainContent = ({
           </div>
         ))}
 
-        <div className="typing-indicator">{/* 可以添加正在輸入的指示器 */}</div>
+        <div className="typing-indicator"></div>
       </div>
 
-      <ChatComposer
+      <MessageComposer
         currentUser={currentUser}
         selectedRoom={selectedRoom}
         onSendMessage={onSendMessage}
