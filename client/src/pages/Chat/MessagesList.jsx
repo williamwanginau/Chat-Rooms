@@ -39,15 +39,42 @@ const ChatMainContent = ({
     try {
       const date = new Date(timestamp);
       const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
+      // Today
       if (date.toDateString() === today.toDateString()) {
         return "Today";
       }
 
+      // Yesterday
+      if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+      }
+
+      // This week (within last 7 days)
+      const diffTime = today - date;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 7) {
+        return date.toLocaleDateString("en-US", {
+          weekday: "long",
+        });
+      }
+
+      // This year
+      if (date.getFullYear() === today.getFullYear()) {
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      // Different year
       return date.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
+        month: "short",
         day: "numeric",
+        year: "numeric",
       });
     } catch (error) {
       console.error("Error formatting day:", error, timestamp);
@@ -88,6 +115,25 @@ const ChatMainContent = ({
             </div>
 
             {group.messages.map((message, index) => {
+              // Handle system messages differently
+              if (message.isSystemMessage) {
+                return (
+                  <div
+                    key={message.messageId}
+                    className="message-row system-message"
+                  >
+                    <div className="system-message-content">
+                      <span className="system-message-text">
+                        {message.message}
+                      </span>
+                      <span className="system-message-timestamp">
+                        {formatDate(message.clientTimestamp)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               const isSelf = currentUser.id === message.sender.id;
               const showAvatar =
                 index === 0 ||

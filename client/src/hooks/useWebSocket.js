@@ -83,11 +83,29 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           break;
         case MESSAGE_TYPES.USER_JOINED:
           setRoomUsers((prevUsers) => [...prevUsers, messageData.user]);
+          // Add system message for user joining
+          const joinUserName = messageData.user.name || messageData.user.username || 'Unknown User';
+          setMessages((prevMessages) => [...prevMessages, {
+            messageId: `system-join-${Date.now()}`,
+            message: `${joinUserName} joined the room`,
+            sender: { id: 'system', name: 'System' },
+            clientTimestamp: new Date().toISOString(),
+            isSystemMessage: true
+          }]);
           break;
         case MESSAGE_TYPES.USER_LEFT:
           setRoomUsers((prevUsers) =>
             prevUsers.filter((user) => user.id !== messageData.user.id)
           );
+          // Add system message for user leaving
+          const leaveUserName = messageData.user.name || messageData.user.username || 'Unknown User';
+          setMessages((prevMessages) => [...prevMessages, {
+            messageId: `system-leave-${Date.now()}`,
+            message: `${leaveUserName} left the room`,
+            sender: { id: 'system', name: 'System' },
+            clientTimestamp: new Date().toISOString(),
+            isSystemMessage: true
+          }]);
           break;
         case MESSAGE_TYPES.TYPING_START:
           setTypingUsers((prevTyping) => {
