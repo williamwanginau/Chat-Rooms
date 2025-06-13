@@ -3,37 +3,27 @@ import MessagesList from "./MessagesList";
 import MembersList from "./MembersList";
 import RoomHeader from "./RoomHeader";
 import "./ChatPage.scss";
-import { useState, useEffect, useRef } from "react";
-import MESSAGE_TYPES from "../../../../messageTypes.json";
+import { useState, useEffect } from "react";
+import useWebSocket from "../../hooks/useWebSocket";
 import PropTypes from "prop-types";
 
 const Chat = () => {
   const [selectedRoomId, setSelectedRoomId] = useState("sport");
-  const [messages, setMessages] = useState([]);
-  const [roomUsers, setRoomUsers] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  const wsRef = useRef(null);
+  
+  const { messages, setMessages, roomUsers, sendMessage, joinRoom } = useWebSocket(currentUser);
+  
+  // 初始化時加入預設房間
+  useEffect(() => {
+    if (selectedRoomId) {
+      joinRoom(selectedRoomId);
+    }
+  }, [selectedRoomId, joinRoom]);
 
-  const buildRoomChangeMessage = (roomId, user) => {
-    return {
-      type: MESSAGE_TYPES.ROOM_CHANGE,
-      room: {
-        id: roomId,
-      },
-      user: {
-        id: user.id,
-        name: user.username,
-      },
-      clientTimestamp: new Date().toISOString(),
-    };
-  };
 
   const handleRoomSelect = (roomId) => {
     setSelectedRoomId(roomId);
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const roomChangeMessage = buildRoomChangeMessage(roomId, currentUser);
-      wsRef.current.send(JSON.stringify(roomChangeMessage));
-    }
+    joinRoom(roomId);
 
     const loadRoomHistory = async () => {
       const response = await fetch(
@@ -57,59 +47,9 @@ const Chat = () => {
   };
 
   const handleSendMessage = (messageData) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(messageData));
-    }
+    sendMessage(messageData);
   };
 
-  useEffect(() => {
-    const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8080";
-    wsRef.current = new WebSocket(WS_URL);
-
-    wsRef.current.onopen = () => {
-      console.log("WebSocket connected successfully");
-
-      wsRef.current.send(
-        JSON.stringify({
-          type: MESSAGE_TYPES.USER_INFO,
-          user: currentUser,
-        })
-      );
-
-      if (selectedRoomId) {
-        const roomChangeMessage = buildRoomChangeMessage(
-          selectedRoomId,
-          currentUser
-        );
-        wsRef.current.send(JSON.stringify(roomChangeMessage));
-      }
-    };
-
-    wsRef.current.onmessage = (event) => {
-      const messageData = JSON.parse(event.data);
-      console.log("Received message:", messageData);
-
-      if (messageData.type === "history") {
-        setMessages(messageData.messages);
-      } else if (messageData.type === MESSAGE_TYPES.MESSAGE) {
-        setMessages((prevMessages) => [...prevMessages, messageData]);
-      }
-    };
-
-    wsRef.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    wsRef.current.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
 
   const DEFAULT_ROOMS = [
     { id: "sport", name: "Sports Room", description: "Discuss sports topics" },
