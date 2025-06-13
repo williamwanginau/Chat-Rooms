@@ -12,10 +12,31 @@ import PropTypes from "prop-types";
 
 const Chat = () => {
   const [selectedRoomId, setSelectedRoomId] = useState("sport");
+  const [customRooms, setCustomRooms] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
   const { messages, setMessages, roomUsers, typingUsers, sendMessage, joinRoom } =
     useWebSocket(currentUser, selectedRoomId);
+
+  // Load custom rooms from localStorage on component mount
+  useEffect(() => {
+    const savedCustomRooms = localStorage.getItem("customRooms");
+    if (savedCustomRooms) {
+      try {
+        const parsedRooms = JSON.parse(savedCustomRooms);
+        setCustomRooms(parsedRooms);
+      } catch (error) {
+        console.error("Failed to parse saved custom rooms:", error);
+      }
+    }
+  }, []);
+
+  // Save custom rooms to localStorage whenever customRooms changes
+  useEffect(() => {
+    if (customRooms.length > 0) {
+      localStorage.setItem("customRooms", JSON.stringify(customRooms));
+    }
+  }, [customRooms]);
 
   const handleRoomSelect = (roomId) => {
     setSelectedRoomId(roomId);
@@ -258,6 +279,79 @@ const Chat = () => {
     console.log("🚪 Simulated users joining and leaving");
   };
 
+  // Handle room creation
+  const handleCreateRoom = async (roomData) => {
+    try {
+      const response = await fetch("http://localhost:3000/api/room/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(roomData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create room");
+      }
+
+      const newRoom = await response.json();
+      
+      // Add to custom rooms list
+      setCustomRooms(prev => [...prev, newRoom]);
+      
+      // Automatically join the new room
+      setSelectedRoomId(newRoom.id);
+      joinRoom(newRoom.id);
+      
+      console.log("✅ Room created successfully:", newRoom);
+      return newRoom;
+    } catch (error) {
+      console.error("❌ Failed to create room:", error);
+      throw error;
+    }
+  };
+
+  // Handle joining room by ID
+  const handleJoinRoom = async (roomId) => {
+    try {
+      // First check if room exists
+      const existsResponse = await fetch(`http://localhost:3000/api/room/${roomId}/exists`);
+      const existsData = await existsResponse.json();
+      
+      if (!existsData.exists) {
+        throw new Error("Room does not exist");
+      }
+
+      // Get room info
+      const infoResponse = await fetch(`http://localhost:3000/api/room/${roomId}/info`);
+      if (!infoResponse.ok) {
+        throw new Error("Unable to get room information");
+      }
+      
+      const roomInfo = await infoResponse.json();
+      
+      // Add to custom rooms if not already present
+      setCustomRooms(prev => {
+        const exists = prev.some(room => room.id === roomId);
+        if (exists) {
+          return prev;
+        }
+        return [...prev, roomInfo];
+      });
+      
+      // Join the room
+      setSelectedRoomId(roomId);
+      joinRoom(roomId);
+      
+      console.log("✅ Joined room successfully:", roomInfo);
+      return roomInfo;
+    } catch (error) {
+      console.error("❌ Failed to join room:", error);
+      throw error;
+    }
+  };
+
   const DEFAULT_ROOMS = [
     { id: "sport", name: "Sports Room", description: "Discuss sports topics" },
     {
@@ -272,7 +366,10 @@ const Chat = () => {
     },
   ];
 
-  const selectedRoom = DEFAULT_ROOMS.find((room) => room.id === selectedRoomId);
+  const selectedRoom = 
+    DEFAULT_ROOMS.find((room) => room.id === selectedRoomId) ||
+    customRooms.find((room) => room.id === selectedRoomId) ||
+    { id: selectedRoomId, name: selectedRoomId, description: "Unknown Room" };
 
   return (
     <div className="chat">
@@ -282,6 +379,9 @@ const Chat = () => {
           onRoomSelect={handleRoomSelect}
           currentRoomId={selectedRoomId}
           defaultRooms={DEFAULT_ROOMS}
+          customRooms={customRooms}
+          onCreateRoom={handleCreateRoom}
+          onJoinRoom={handleJoinRoom}
         />
       </div>
       <div className="chat__main">
