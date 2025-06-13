@@ -1,10 +1,16 @@
 const MESSAGE_TYPES = require("../../../shared/messageTypes.json");
 
 class Chatroom {
-  constructor(roomId) {
+  constructor(roomId, metadata = {}) {
     this.roomId = roomId;
     this.clients = new Set();
     this.history = [];
+    
+    // Room metadata
+    this.name = metadata.name || roomId;
+    this.description = metadata.description || "";
+    this.isCustom = metadata.isCustom || false;
+    this.createdAt = metadata.createdAt || new Date().toISOString();
   }
 
   addClient(ws) {

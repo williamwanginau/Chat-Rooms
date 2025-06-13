@@ -49,14 +49,22 @@ const handleRoomChange = (message, ws, rooms) => {
   console.log(`User ${ws.userInfo?.name} joined room ${newRoomId}`);
 };
 
-const getOrCreateRoom = (roomId, rooms) => {
+const getOrCreateRoom = (roomId, rooms, metadata = {}) => {
   const Chatroom = require("../models/Chatroom");
   
   let room = rooms.get(roomId);
   if (!room) {
-    room = new Chatroom(roomId);
+    // For dynamic room creation, use minimal metadata
+    const roomMetadata = {
+      name: metadata.name || roomId,
+      description: metadata.description || "",
+      isCustom: metadata.isCustom !== undefined ? metadata.isCustom : true,
+      createdAt: new Date().toISOString()
+    };
+    
+    room = new Chatroom(roomId, roomMetadata);
     rooms.set(roomId, room);
-    console.log(`Room ${roomId} created`);
+    console.log(`Room ${roomId} created dynamically`);
   }
   return room;
 };
