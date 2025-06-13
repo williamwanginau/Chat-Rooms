@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import "./MessagesList.scss";
 import MessageComposer from "./MessageComposer";
+import TypingIndicator from "./TypingIndicator";
 import { useEffect, useRef } from "react";
 
 const ChatMainContent = ({
@@ -8,6 +9,9 @@ const ChatMainContent = ({
   currentUser,
   selectedRoom,
   onSendMessage,
+  typingUsers,
+  onTypingStart,
+  onTypingStop,
 }) => {
   const messageListRef = useRef(null);
 
@@ -132,13 +136,15 @@ const ChatMainContent = ({
           </div>
         ))}
 
-        <div className="typing-indicator"></div>
+        <TypingIndicator typingUsers={typingUsers} />
       </div>
 
       <MessageComposer
         currentUser={currentUser}
         selectedRoom={selectedRoom}
         onSendMessage={onSendMessage}
+        onTypingStart={onTypingStart}
+        onTypingStop={onTypingStop}
       />
     </div>
   );
@@ -149,6 +155,9 @@ ChatMainContent.propTypes = {
   currentUser: PropTypes.object.isRequired,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,
+  typingUsers: PropTypes.array,
+  onTypingStart: PropTypes.func,
+  onTypingStop: PropTypes.func,
 };
 
 export default ChatMainContent;

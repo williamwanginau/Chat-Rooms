@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   FaMicrophone,
@@ -8,7 +8,7 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
-import MESSAGE_TYPES from "../../../../messageTypes.json";
+import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 
 import "./MessageComposer.scss";
 
@@ -16,8 +16,12 @@ export default function MessageComposer({
   currentUser,
   selectedRoom,
   onSendMessage,
+  onTypingStart,
+  onTypingStop,
 }) {
   const [message, setMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const buildChatMessage = (messageText, user, roomId) => {
     return {
@@ -36,7 +40,43 @@ export default function MessageComposer({
   };
 
   const handleChange = (e) => {
-    setMessage(e.target.value);
+    const newMessage = e.target.value;
+    setMessage(newMessage);
+
+    // Handle typing indicators
+    if (newMessage.trim() && !isTyping) {
+      // Start typing
+      setIsTyping(true);
+      if (onTypingStart) {
+        const typingData = {
+          type: MESSAGE_TYPES.TYPING_START,
+          user: currentUser,
+          room: { id: selectedRoom?.id },
+          timestamp: new Date().toISOString(),
+        };
+        onTypingStart(typingData);
+      }
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      if (isTyping) {
+        setIsTyping(false);
+        if (onTypingStop) {
+          onTypingStop({
+            type: MESSAGE_TYPES.TYPING_STOP,
+            user: currentUser,
+            room: { id: selectedRoom?.id },
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }, 2000);
   };
 
   const handleSend = () => {
@@ -53,6 +93,24 @@ export default function MessageComposer({
 
       console.log("Send message:", messageData);
       setMessage("");
+
+      // Stop typing when message is sent
+      if (isTyping) {
+        setIsTyping(false);
+        if (onTypingStop) {
+          onTypingStop({
+            type: MESSAGE_TYPES.TYPING_STOP,
+            user: currentUser,
+            room: { id: selectedRoom?.id },
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      // Clear timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     }
   };
 
@@ -62,6 +120,25 @@ export default function MessageComposer({
       handleSend();
     }
   };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        
+        // Send stop typing when component unmounts
+        if (isTyping && onTypingStop) {
+          onTypingStop({
+            type: MESSAGE_TYPES.TYPING_STOP,
+            user: currentUser,
+            room: { id: selectedRoom?.id },
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    };
+  }, [isTyping, onTypingStop, currentUser, selectedRoom?.id]);
 
   return (
     <div className="chat-composer">
@@ -88,4 +165,6 @@ MessageComposer.propTypes = {
   currentUser: PropTypes.object.isRequired,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,
+  onTypingStart: PropTypes.func,
+  onTypingStop: PropTypes.func,
 };

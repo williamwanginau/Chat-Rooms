@@ -61,6 +61,21 @@ const getOrCreateRoom = (roomId, rooms) => {
   return room;
 };
 
+const handleTyping = (message, ws, rooms) => {
+  if (!ws.roomId || !rooms.has(ws.roomId)) {
+    console.log("No room found for typing message");
+    return;
+  }
+
+  const room = rooms.get(ws.roomId);
+  
+  // Broadcast typing message to other users in the room
+  room.broadcastToOthers(ws, {
+    ...message,
+    serverTimestamp: new Date().toISOString(),
+  });
+};
+
 const handleMessage = (message, ws, rooms) => {
   console.log("Received message:", message);
 
@@ -73,6 +88,10 @@ const handleMessage = (message, ws, rooms) => {
       break;
     case MESSAGE_TYPES.ROOM_CHANGE:
       handleRoomChange(message, ws, rooms);
+      break;
+    case MESSAGE_TYPES.TYPING_START:
+    case MESSAGE_TYPES.TYPING_STOP:
+      handleTyping(message, ws, rooms);
       break;
     default:
       console.log("Unknown message type:", message.type);
