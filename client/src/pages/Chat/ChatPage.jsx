@@ -279,6 +279,60 @@ const Chat = () => {
     console.log("🚪 Simulated users joining and leaving");
   };
 
+  const simulateGradualUserJoin = () => {
+    const virtualUsers = [
+      { id: "virtual1", name: "Alex", username: "Alex" },
+      { id: "virtual2", name: "Sarah", username: "Sarah" },
+      { id: "virtual3", name: "Mike", username: "Mike" },
+      { id: "virtual4", name: "Lisa", username: "Lisa" },
+      { id: "virtual5", name: "Tom", username: "Tom" },
+      { id: "virtual6", name: "Kate", username: "Kate" },
+      { id: "virtual7", name: "John", username: "John" },
+      { id: "virtual8", name: "Amy", username: "Amy" }
+    ];
+
+    // Gradually add virtual users with random intervals between 1-3 seconds
+    virtualUsers.forEach((user, index) => {
+      const randomDelay = Math.random() * 2000 + 1000; // Random delay between 1-3 seconds
+      
+      setTimeout(() => {
+        sendMessage({
+          type: MESSAGE_TYPES.USER_JOINED,
+          user,
+          room: { id: selectedRoomId },
+        });
+      }, index * randomDelay);
+    });
+
+    console.log("👥 Started gradual virtual user join simulation");
+  };
+
+  const removeAllVirtualUsers = () => {
+    const virtualUsers = [
+      { id: "virtual1", name: "Alex", username: "Alex" },
+      { id: "virtual2", name: "Sarah", username: "Sarah" },
+      { id: "virtual3", name: "Mike", username: "Mike" },
+      { id: "virtual4", name: "Lisa", username: "Lisa" },
+      { id: "virtual5", name: "Tom", username: "Tom" },
+      { id: "virtual6", name: "Kate", username: "Kate" },
+      { id: "virtual7", name: "John", username: "John" },
+      { id: "virtual8", name: "Amy", username: "Amy" }
+    ];
+
+    // Remove all virtual users with short intervals
+    virtualUsers.forEach((user, index) => {
+      setTimeout(() => {
+        sendMessage({
+          type: MESSAGE_TYPES.USER_LEFT,
+          user,
+          room: { id: selectedRoomId },
+        });
+      }, index * 200); // 200ms interval for quick removal
+    });
+
+    console.log("🗑️ Removing all virtual users");
+  };
+
   // Handle room creation
   const handleCreateRoom = async (roomData) => {
     try {
@@ -414,6 +468,8 @@ const Chat = () => {
         onSimulateTyping={simulateTyping}
         onGenerateLongMessages={generateLongMessages}
         onSimulateUserJoinLeave={simulateUserJoinLeave}
+        onSimulateGradualUserJoin={simulateGradualUserJoin}
+        onRemoveAllVirtualUsers={removeAllVirtualUsers}
       />
     </div>
   );

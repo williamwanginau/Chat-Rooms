@@ -84,6 +84,40 @@ const handleTyping = (message, ws, rooms) => {
   });
 };
 
+const handleUserJoined = (message, ws, rooms) => {
+  if (!ws.roomId || !rooms.has(ws.roomId)) {
+    console.log("No room found for user joined message");
+    return;
+  }
+
+  const room = rooms.get(ws.roomId);
+  
+  // Broadcast user joined message to all users in the room (including sender for dev tool)
+  room.broadcastToAll({
+    ...message,
+    serverTimestamp: new Date().toISOString(),
+  });
+  
+  console.log(`Virtual user ${message.user?.name} joined room ${ws.roomId} (dev simulation)`);
+};
+
+const handleUserLeft = (message, ws, rooms) => {
+  if (!ws.roomId || !rooms.has(ws.roomId)) {
+    console.log("No room found for user left message");
+    return;
+  }
+
+  const room = rooms.get(ws.roomId);
+  
+  // Broadcast user left message to all users in the room (including sender for dev tool)
+  room.broadcastToAll({
+    ...message,
+    serverTimestamp: new Date().toISOString(),
+  });
+  
+  console.log(`Virtual user ${message.user?.name} left room ${ws.roomId} (dev simulation)`);
+};
+
 const handleMessage = (message, ws, rooms) => {
   console.log("Received message:", message);
 
@@ -100,6 +134,12 @@ const handleMessage = (message, ws, rooms) => {
     case MESSAGE_TYPES.TYPING_START:
     case MESSAGE_TYPES.TYPING_STOP:
       handleTyping(message, ws, rooms);
+      break;
+    case MESSAGE_TYPES.USER_JOINED:
+      handleUserJoined(message, ws, rooms);
+      break;
+    case MESSAGE_TYPES.USER_LEFT:
+      handleUserLeft(message, ws, rooms);
       break;
     default:
       console.log("Unknown message type:", message.type);

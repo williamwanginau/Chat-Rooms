@@ -7,9 +7,10 @@ const DevFunctions = ({
   onClearMessages,
   onGenerateStressTest,
   onSimulateTyping,
-  onSimulateSlowNetwork,
   onGenerateLongMessages,
-  onSimulateUserJoinLeave 
+  onSimulateUserJoinLeave,
+  onSimulateGradualUserJoin,
+  onRemoveAllVirtualUsers
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -91,6 +92,22 @@ const DevFunctions = ({
               >
                 🚪 User Join/Leave
               </button>
+              
+              <button 
+                className="dev-functions__button"
+                onClick={() => onSimulateGradualUserJoin?.()}
+                title="Gradually add virtual members to the chat room"
+              >
+                👥 Add Virtual Members
+              </button>
+              
+              <button 
+                className="dev-functions__button dev-functions__button--danger"
+                onClick={() => onRemoveAllVirtualUsers?.()}
+                title="Remove all virtual members from the chat room"
+              >
+                🗑️ Remove Virtual Members
+              </button>
             </div>
 
             <div className="dev-functions__section">
@@ -115,9 +132,10 @@ DevFunctions.propTypes = {
   onClearMessages: PropTypes.func.isRequired,
   onGenerateStressTest: PropTypes.func,
   onSimulateTyping: PropTypes.func,
-  onSimulateSlowNetwork: PropTypes.func,
   onGenerateLongMessages: PropTypes.func,
   onSimulateUserJoinLeave: PropTypes.func,
+  onSimulateGradualUserJoin: PropTypes.func,
+  onRemoveAllVirtualUsers: PropTypes.func,
 };
 
 export default DevFunctions;
