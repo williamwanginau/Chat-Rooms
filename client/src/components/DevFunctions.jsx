@@ -85,6 +85,37 @@ const DevFunctions = ({
     console.log("🗑️ Cleared all messages");
   };
 
+  const clearAllFriendships = () => {
+    try {
+      // 清除所有好友關係表
+      localStorage.removeItem('friendships');
+      
+      // 清除所有用戶的好友列表
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const updatedUsers = users.map(user => ({
+        ...user,
+        friends: []
+      }));
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      
+      // 清除邀請相關資料
+      localStorage.removeItem('sentInvitations');
+      localStorage.removeItem('receivedInvitations');
+      
+      // 移除廢棄的 friends key (如果存在)
+      localStorage.removeItem('friends');
+      
+      // 觸發事件通知組件更新
+      window.dispatchEvent(new CustomEvent('friendshipsCleared'));
+      
+      console.log('✅ All friendships cleared');
+      alert('所有好友關係已清除');
+    } catch (error) {
+      console.error('Error clearing friendships:', error);
+      alert('清除好友關係時發生錯誤');
+    }
+  };
+
   const handleOverrideUsersFromJson = async () => {
     try {
       const response = await fetch('/dummy data/users.json');
@@ -234,6 +265,14 @@ const DevFunctions = ({
                 title="Clear all friends and invitations data"
               >
                 🗑️ Clear Friends Data
+              </button>
+              
+              <button 
+                className="dev-functions__button dev-functions__button--danger"
+                onClick={clearAllFriendships}
+                title="Remove all friendship relationships but keep users"
+              >
+                💔 Clear All Friendships
               </button>
             </div>
 

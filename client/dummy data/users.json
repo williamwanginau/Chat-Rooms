@@ -5,7 +5,10 @@
     "username": "Alice",
     "email": "alice@example.com",
     "online": true,
-    "lastSeen": "2023-10-01T10:00:00Z"
+    "lastSeen": "2023-10-01T10:00:00Z",
+    "friends": [
+      "c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f"
+    ]
   },
   {
     "internalId": "b3d4f5a6-7c8e-4a1b-9f2d-8c5e7a4b6f9a",
@@ -21,7 +24,10 @@
     "username": "Charlie",
     "email": "charlie@example.com",
     "online": true,
-    "lastSeen": "2023-10-01T08:45:00Z"
+    "lastSeen": "2023-10-01T08:45:00Z",
+    "friends": [
+      "a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e"
+    ]
   },
   {
     "internalId": "d5a7c3f9-8e4b-4d6a-9c2e-6f8a3d5c7b9e",

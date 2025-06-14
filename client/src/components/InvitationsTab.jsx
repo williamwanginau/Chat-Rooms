@@ -23,8 +23,26 @@ const InvitationsTab = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const allReceivedInvitations = receivedInvitations;
-  const allSentInvitations = sentInvitations;
+  // Helper function to get user info by internal ID
+  const getUserByInternalId = (internalId) => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    return users.find(user => user.internalId === internalId);
+  };
+
+  // Helper function to enrich invitations with user info
+  const enrichInvitation = (invitation) => {
+    const fromUser = getUserByInternalId(invitation.fromUserId);
+    const toUser = getUserByInternalId(invitation.toUserId);
+    
+    return {
+      ...invitation,
+      from: fromUser || { username: "Unknown User", avatar: "👤", name: "Unknown" },
+      to: toUser || { username: "Unknown User", avatar: "👤", name: "Unknown" }
+    };
+  };
+
+  const allReceivedInvitations = receivedInvitations.map(enrichInvitation);
+  const allSentInvitations = sentInvitations.map(enrichInvitation);
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);

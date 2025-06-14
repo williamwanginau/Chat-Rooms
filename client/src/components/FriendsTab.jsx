@@ -57,7 +57,11 @@ const FriendsTab = ({ friends = [], onStartChat, onRemoveFriend }) => {
             {filteredFriends.map((friend) => (
               <div key={friend.id} className="friends-tab__item">
                 <div className="friends-tab__item-avatar">
-                  <span className="friends-tab__avatar">{friend.avatar}</span>
+                  <span className="friends-tab__avatar">
+                    {friend.avatar && friend.avatar !== "/default-avatar.png" && friend.avatar !== "default-avatar.png" 
+                      ? friend.avatar 
+                      : friend.name ? friend.name.charAt(0).toUpperCase() : "?"}
+                  </span>
                   <span 
                     className={`friends-tab__status friends-tab__status--${friend.status}`}
                   ></span>

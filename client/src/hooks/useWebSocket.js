@@ -168,6 +168,98 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
             console.log("🔄 Synced users data to localStorage");
           }
           break;
+        case MESSAGE_TYPES.FRIEND_INVITATION_RECEIVED:
+          console.log("Received friend invitation:", messageData.invitation);
+          // Store received invitation in localStorage
+          const receivedInvitations = JSON.parse(localStorage.getItem('receivedInvitations') || '[]');
+          receivedInvitations.push(messageData.invitation);
+          localStorage.setItem('receivedInvitations', JSON.stringify(receivedInvitations));
+          // Trigger custom event for friend invitation received
+          window.dispatchEvent(new CustomEvent('friendInvitationReceived', {
+            detail: { invitation: messageData.invitation }
+          }));
+          break;
+        case MESSAGE_TYPES.FRIEND_INVITATION_SENT:
+          console.log("Friend invitation sent response:", messageData);
+          // Store sent invitation if successful
+          if (messageData.success && messageData.invitation) {
+            const sentInvitations = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
+            sentInvitations.push(messageData.invitation);
+            localStorage.setItem('sentInvitations', JSON.stringify(sentInvitations));
+          }
+          // Trigger custom event for friend invitation sent confirmation
+          window.dispatchEvent(new CustomEvent('friendInvitationSent', {
+            detail: { success: messageData.success, error: messageData.error, toUserId: messageData.toUserId, invitation: messageData.invitation }
+          }));
+          break;
+        case MESSAGE_TYPES.FRIEND_INVITATION_ACCEPTED:
+          console.log("Friend invitation accepted:", messageData);
+          // Remove invitation from sent invitations if it exists
+          const sentInvitations = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
+          const updatedSentInvitations = sentInvitations.filter(inv => inv.id !== messageData.invitationId);
+          localStorage.setItem('sentInvitations', JSON.stringify(updatedSentInvitations));
+          // Trigger custom event for friend invitation accepted
+          window.dispatchEvent(new CustomEvent('friendInvitationAccepted', {
+            detail: { invitationId: messageData.invitationId, acceptedBy: messageData.acceptedBy }
+          }));
+          break;
+        case MESSAGE_TYPES.FRIEND_INVITATION_DECLINED:
+          console.log("Friend invitation declined:", messageData);
+          // Remove invitation from sent invitations if it exists
+          const sentInvitations2 = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
+          const updatedSentInvitations2 = sentInvitations2.filter(inv => inv.id !== messageData.invitationId);
+          localStorage.setItem('sentInvitations', JSON.stringify(updatedSentInvitations2));
+          // Trigger custom event for friend invitation declined
+          window.dispatchEvent(new CustomEvent('friendInvitationDeclined', {
+            detail: { invitationId: messageData.invitationId, declinedBy: messageData.declinedBy }
+          }));
+          break;
+        case MESSAGE_TYPES.FRIEND_INVITATION_CANCELLED:
+          console.log("Friend invitation cancelled:", messageData);
+          // Remove invitation from received invitations if it exists
+          const receivedInvitations2 = JSON.parse(localStorage.getItem('receivedInvitations') || '[]');
+          const updatedReceivedInvitations = receivedInvitations2.filter(inv => inv.id !== messageData.invitationId);
+          localStorage.setItem('receivedInvitations', JSON.stringify(updatedReceivedInvitations));
+          // Trigger custom event for friend invitation cancelled
+          window.dispatchEvent(new CustomEvent('friendInvitationCancelled', {
+            detail: { invitationId: messageData.invitationId, cancelledBy: messageData.cancelledBy }
+          }));
+          break;
+        case MESSAGE_TYPES.FRIEND_ADDED:
+          console.log("Friend added:", messageData.newFriend);
+          console.log("Friendship data:", messageData.friendshipData);
+          
+          // Import friendship utils dynamically
+          import('../utils/friendshipUtils.js').then(({ createFriendship }) => {
+            // Create friendship using the data from server
+            if (messageData.friendshipData) {
+              const created = createFriendship(
+                messageData.friendshipData.user1,
+                messageData.friendshipData.user2,
+                messageData.friendshipData.initiatedBy
+              );
+              
+              if (created) {
+                // Trigger custom event for friend added
+                window.dispatchEvent(new CustomEvent('friendAdded', {
+                  detail: { 
+                    newFriend: messageData.newFriend,
+                    friendshipData: messageData.friendshipData
+                  }
+                }));
+              }
+            }
+          }).catch(error => {
+            console.error('Error importing friendship utils:', error);
+          });
+          break;
+        case MESSAGE_TYPES.FRIENDS_LIST_SYNC:
+          console.log("Friends list sync:", messageData.friends);
+          // Trigger custom event for friends list sync
+          window.dispatchEvent(new CustomEvent('friendsListSync', {
+            detail: { friendIds: messageData.friends }
+          }));
+          break;
         default:
           console.log("Unknown message type:", messageData.type);
       }

@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import useWebSocket from "../../hooks/useWebSocket";
 import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 import PropTypes from "prop-types";
+import { getUserFriendsInfo } from "../../utils/friendshipUtils";
 
 const Chat = () => {
   const [selectedRoomId, setSelectedRoomId] = useState("sport");
@@ -23,6 +24,167 @@ const Chat = () => {
 
   const { messages, setMessages, roomUsers, typingUsers, sendMessage, joinRoom } =
     useWebSocket(currentUser, selectedRoomId);
+
+  // Load invitations from localStorage on component mount
+  useEffect(() => {
+    const savedReceivedInvitations = localStorage.getItem("receivedInvitations");
+    const savedSentInvitations = localStorage.getItem("sentInvitations");
+    
+    if (savedReceivedInvitations) {
+      try {
+        const parsedReceivedInvitations = JSON.parse(savedReceivedInvitations);
+        setReceivedInvitations(parsedReceivedInvitations);
+      } catch (error) {
+        console.error("Failed to parse saved received invitations:", error);
+      }
+    }
+    
+    if (savedSentInvitations) {
+      try {
+        const parsedSentInvitations = JSON.parse(savedSentInvitations);
+        setSentInvitations(parsedSentInvitations);
+      } catch (error) {
+        console.error("Failed to parse saved sent invitations:", error);
+      }
+    }
+
+    // Load friends from user object instead of separate localStorage key
+    if (currentUser) {
+      const userFriends = getUserFriendsInfo(currentUser.internalId);
+      setFriends(userFriends.map(friend => ({
+        id: friend.internalId,
+        name: friend.username,
+        avatar: friend.avatar || "/default-avatar.png",
+        status: friend.online ? "online" : "offline",
+        statusTimestamp: friend.lastSeen || new Date().toISOString()
+      })));
+    }
+  }, []);
+
+  // Handle friend invitation events
+  useEffect(() => {
+    const handleFriendInvitationReceived = (event) => {
+      const { invitation } = event.detail;
+      setReceivedInvitations(prev => {
+        const updated = [...prev, invitation];
+        localStorage.setItem("receivedInvitations", JSON.stringify(updated));
+        return updated;
+      });
+      console.log("Added received invitation:", invitation);
+    };
+
+    const handleFriendInvitationSent = (event) => {
+      const { success, error, toUserId, invitation } = event.detail;
+      if (success && invitation) {
+        setSentInvitations(prev => {
+          const updated = [...prev, invitation];
+          localStorage.setItem("sentInvitations", JSON.stringify(updated));
+          return updated;
+        });
+        console.log("Friend invitation sent successfully to:", toUserId);
+      } else {
+        console.error("Failed to send friend invitation:", error);
+        alert(`Failed to send invitation: ${error}`);
+      }
+    };
+
+    const handleFriendInvitationAccepted = (event) => {
+      const { invitationId, acceptedBy } = event.detail;
+      // Remove from received invitations
+      setReceivedInvitations(prev => {
+        const updated = prev.filter(inv => inv.id !== invitationId);
+        localStorage.setItem("receivedInvitations", JSON.stringify(updated));
+        return updated;
+      });
+      // Also remove from sent invitations (for the sender)
+      setSentInvitations(prev => {
+        const updated = prev.filter(inv => inv.id !== invitationId);
+        localStorage.setItem("sentInvitations", JSON.stringify(updated));
+        return updated;
+      });
+      console.log("Friend invitation was accepted by:", acceptedBy.name);
+    };
+
+    const handleFriendInvitationDeclined = (event) => {
+      const { invitationId, declinedBy } = event.detail;
+      // Remove from sent invitations
+      setSentInvitations(prev => {
+        const updated = prev.filter(inv => inv.id !== invitationId);
+        localStorage.setItem("sentInvitations", JSON.stringify(updated));
+        return updated;
+      });
+      console.log("Friend invitation was declined by:", declinedBy.name);
+    };
+
+    const handleFriendInvitationCancelled = (event) => {
+      const { invitationId, cancelledBy } = event.detail;
+      // Remove from received invitations
+      setReceivedInvitations(prev => {
+        const updated = prev.filter(inv => inv.id !== invitationId);
+        localStorage.setItem("receivedInvitations", JSON.stringify(updated));
+        return updated;
+      });
+      console.log("Friend invitation was cancelled by:", cancelledBy.name);
+    };
+
+    const handleFriendAdded = (event) => {
+      const { newFriend } = event.detail;
+      // Add to friends list
+      setFriends(prev => {
+        // Friends are now managed by friendshipUtils, just update UI state
+        const updated = [...prev, {
+          id: newFriend.id,
+          name: newFriend.name || newFriend.username,
+          username: newFriend.id,
+          email: newFriend.email || `${newFriend.id}@example.com`,
+          avatar: newFriend.avatar || "/default-avatar.png",
+          status: "online",
+          statusTimestamp: new Date().toISOString()
+        }];
+        return updated;
+      });
+      console.log("New friend added:", newFriend.name);
+    };
+
+    const handleFriendsListSync = (event) => {
+      const { friendIds } = event.detail;
+      console.log("Syncing friends list:", friendIds);
+      
+      // Convert friend IDs to friend objects
+      const syncedFriends = friendIds.map(friendId => ({
+        id: friendId,
+        name: friendId, // We only have the ID, use it as name for now
+        username: friendId,
+        email: `${friendId}@example.com`,
+        avatar: "/default-avatar.png",
+        status: "offline", // Default to offline, will be updated if they're online
+        statusTimestamp: new Date().toISOString()
+      }));
+      
+      setFriends(syncedFriends);
+      console.log("Friends list synced with server");
+    };
+
+    // Add event listeners
+    window.addEventListener('friendInvitationReceived', handleFriendInvitationReceived);
+    window.addEventListener('friendInvitationSent', handleFriendInvitationSent);
+    window.addEventListener('friendInvitationAccepted', handleFriendInvitationAccepted);
+    window.addEventListener('friendInvitationDeclined', handleFriendInvitationDeclined);
+    window.addEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
+    window.addEventListener('friendAdded', handleFriendAdded);
+    window.addEventListener('friendsListSync', handleFriendsListSync);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('friendInvitationReceived', handleFriendInvitationReceived);
+      window.removeEventListener('friendInvitationSent', handleFriendInvitationSent);
+      window.removeEventListener('friendInvitationAccepted', handleFriendInvitationAccepted);
+      window.removeEventListener('friendInvitationDeclined', handleFriendInvitationDeclined);
+      window.removeEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
+      window.removeEventListener('friendAdded', handleFriendAdded);
+      window.removeEventListener('friendsListSync', handleFriendsListSync);
+    };
+  }, []);
 
   // Load custom rooms from localStorage on component mount
   useEffect(() => {
@@ -426,27 +588,62 @@ const Chat = () => {
   };
 
   const handleAcceptInvitation = (invitation) => {
-    // TODO: Implement invitation acceptance
     console.log("Accepting invitation:", invitation);
-    alert(`Accept friend invitation from ${invitation.from.name} feature not yet implemented`);
+    sendMessage({
+      type: MESSAGE_TYPES.FRIEND_INVITATION_ACCEPTED,
+      invitationId: invitation.id,
+      fromUserId: invitation.from.id,
+    });
+    
+    // Remove from received invitations in localStorage
+    setReceivedInvitations(prev => {
+      const updated = prev.filter(inv => inv.id !== invitation.id);
+      localStorage.setItem("receivedInvitations", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleDeclineInvitation = (invitation) => {
-    // TODO: Implement invitation decline
     console.log("Declining invitation:", invitation);
-    alert(`Decline friend invitation from ${invitation.from.name} feature not yet implemented`);
+    sendMessage({
+      type: MESSAGE_TYPES.FRIEND_INVITATION_DECLINED,
+      invitationId: invitation.id,
+      fromUserId: invitation.from.id,
+    });
+    
+    // Remove from received invitations in localStorage
+    setReceivedInvitations(prev => {
+      const updated = prev.filter(inv => inv.id !== invitation.id);
+      localStorage.setItem("receivedInvitations", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleCancelInvitation = (invitation) => {
-    // TODO: Implement invitation cancellation
     console.log("Canceling invitation:", invitation);
-    alert(`Cancel friend invitation to ${invitation.to.name} feature not yet implemented`);
+    sendMessage({
+      type: MESSAGE_TYPES.FRIEND_INVITATION_CANCELLED,
+      invitationId: invitation.id,
+      toUserId: invitation.toUserId,
+    });
+    
+    // Remove from sent invitations in localStorage
+    setSentInvitations(prev => {
+      const updated = prev.filter(inv => inv.id !== invitation.id);
+      localStorage.setItem("sentInvitations", JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  const handleSendInvitation = (username) => {
-    // TODO: Implement sending friend invitation
-    console.log("Sending invitation to:", username);
-    alert(`Send friend invitation to ${username} feature not yet implemented`);
+  const handleSendInvitation = (userId, message = "") => {
+    console.log("Sending invitation to:", userId);
+    sendMessage({
+      type: MESSAGE_TYPES.FRIEND_INVITATION_SENT,
+      toUserId: userId,
+      invitationData: {
+        message: message,
+      }
+    });
   };
 
   // Dev tools handlers
