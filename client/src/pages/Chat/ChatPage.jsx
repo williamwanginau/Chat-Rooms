@@ -70,7 +70,6 @@ const Chat = () => {
         localStorage.setItem("receivedInvitations", JSON.stringify(updated));
         return updated;
       });
-      console.log("Added received invitation:", invitation);
     };
 
     const handleFriendInvitationSent = (event) => {
@@ -81,7 +80,6 @@ const Chat = () => {
           localStorage.setItem("sentInvitations", JSON.stringify(updated));
           return updated;
         });
-        console.log("Friend invitation sent successfully to:", toUserId);
       } else {
         console.error("Failed to send friend invitation:", error);
         alert(`Failed to send invitation: ${error}`);
@@ -102,7 +100,6 @@ const Chat = () => {
         localStorage.setItem("sentInvitations", JSON.stringify(updated));
         return updated;
       });
-      console.log("Friend invitation was accepted by:", acceptedBy.name);
     };
 
     const handleFriendInvitationDeclined = (event) => {
@@ -113,7 +110,6 @@ const Chat = () => {
         localStorage.setItem("sentInvitations", JSON.stringify(updated));
         return updated;
       });
-      console.log("Friend invitation was declined by:", declinedBy.name);
     };
 
     const handleFriendInvitationCancelled = (event) => {
@@ -124,7 +120,6 @@ const Chat = () => {
         localStorage.setItem("receivedInvitations", JSON.stringify(updated));
         return updated;
       });
-      console.log("Friend invitation was cancelled by:", cancelledBy.name);
     };
 
     const handleFriendAdded = (event) => {
@@ -143,12 +138,10 @@ const Chat = () => {
         }];
         return updated;
       });
-      console.log("New friend added:", newFriend.name);
     };
 
     const handleFriendsListSync = (event) => {
       const { friendIds } = event.detail;
-      console.log("Syncing friends list:", friendIds);
       
       // Convert friend IDs to friend objects
       const syncedFriends = friendIds.map(friendId => ({
@@ -162,7 +155,6 @@ const Chat = () => {
       }));
       
       setFriends(syncedFriends);
-      console.log("Friends list synced with server");
     };
 
     // Add event listeners
@@ -322,12 +314,10 @@ const Chat = () => {
     );
 
     setMessages(allTestMessages);
-    console.log("✨ Generated test messages with different dates!");
   };
 
   const handleClearMessages = () => {
     setMessages([]);
-    console.log("🗑️ Cleared all messages");
   };
 
   const generateLongMessages = () => {
@@ -359,7 +349,6 @@ const Chat = () => {
     ];
     
     setMessages(prev => [...prev, ...longMessages]);
-    console.log("📝 Generated long messages");
   };
 
   const generateStressTest = () => {
@@ -374,7 +363,6 @@ const Chat = () => {
     }));
     
     setMessages(prev => [...prev, ...stressMessages]);
-    console.log("⚡ Generated 100 stress test messages");
   };
 
   const simulateTyping = () => {
@@ -414,7 +402,6 @@ const Chat = () => {
       });
     }, 5000);
 
-    console.log("⌨️ Simulated multiple users typing");
   };
 
   const simulateUserJoinLeave = () => {
@@ -444,7 +431,6 @@ const Chat = () => {
       }, (index * 1000) + 3000);
     });
 
-    console.log("🚪 Simulated users joining and leaving");
   };
 
   const simulateGradualUserJoin = () => {
@@ -472,7 +458,6 @@ const Chat = () => {
       }, index * randomDelay);
     });
 
-    console.log("👥 Started gradual virtual user join simulation");
   };
 
   const removeAllVirtualUsers = () => {
@@ -498,7 +483,6 @@ const Chat = () => {
       }, index * 200); // 200ms interval for quick removal
     });
 
-    console.log("🗑️ Removing all virtual users");
   };
 
   // Handle room creation
@@ -526,7 +510,6 @@ const Chat = () => {
       setSelectedRoomId(newRoom.id);
       joinRoom(newRoom.id);
       
-      console.log("✅ Room created successfully:", newRoom);
       return newRoom;
     } catch (error) {
       console.error("❌ Failed to create room:", error);
@@ -566,7 +549,6 @@ const Chat = () => {
       setSelectedRoomId(roomId);
       joinRoom(roomId);
       
-      console.log("✅ Joined room successfully:", roomInfo);
       return roomInfo;
     } catch (error) {
       console.error("❌ Failed to join room:", error);
@@ -577,18 +559,15 @@ const Chat = () => {
   // Friends related handlers
   const handleStartChat = (friend) => {
     // TODO: Implement private chat functionality
-    console.log("Starting chat with:", friend);
     alert(`Start chat with ${friend.name} feature not yet implemented`);
   };
 
   const handleRemoveFriend = (friend) => {
     // TODO: Implement friend removal
-    console.log("Removing friend:", friend);
     alert(`Remove friend ${friend.name} feature not yet implemented`);
   };
 
   const handleAcceptInvitation = (invitation) => {
-    console.log("Accepting invitation:", invitation);
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_ACCEPTED,
       invitationId: invitation.id,
@@ -604,7 +583,6 @@ const Chat = () => {
   };
 
   const handleDeclineInvitation = (invitation) => {
-    console.log("Declining invitation:", invitation);
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_DECLINED,
       invitationId: invitation.id,
@@ -620,7 +598,6 @@ const Chat = () => {
   };
 
   const handleCancelInvitation = (invitation) => {
-    console.log("Canceling invitation:", invitation);
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_CANCELLED,
       invitationId: invitation.id,
@@ -636,7 +613,6 @@ const Chat = () => {
   };
 
   const handleSendInvitation = (userId, message = "") => {
-    console.log("Sending invitation to:", userId);
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_SENT,
       toUserId: userId,
@@ -684,7 +660,6 @@ const Chat = () => {
     ];
 
     setFriends(mockFriends);
-    console.log("👥 Generated mock friends data");
   };
 
   const generateInvitations = () => {
@@ -730,14 +705,12 @@ const Chat = () => {
 
     setReceivedInvitations(mockReceivedInvitations);
     setSentInvitations(mockSentInvitations);
-    console.log("📨 Generated mock invitations data");
   };
 
   const clearFriendsData = () => {
     setFriends([]);
     setReceivedInvitations([]);
     setSentInvitations([]);
-    console.log("🗑️ Cleared all friends and invitations data");
   };
 
   // Tab change handler

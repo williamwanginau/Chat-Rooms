@@ -91,7 +91,6 @@ export default function MessageComposer({
         onSendMessage(messageData);
       }
 
-      console.log("Send message:", messageData);
       setMessage("");
 
       // Stop typing when message is sent

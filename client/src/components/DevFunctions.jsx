@@ -72,17 +72,14 @@ const DevFunctions = ({
       detail: { key: 'currentUser', newValue: JSON.stringify(selectedUser) }
     }));
     
-    console.log("👤 Switched to user:", selectedUser.username);
   };
 
   const handleGenerateMessages = () => {
     onGenerateTestMessages();
-    console.log("📅 Generated test messages with different dates");
   };
 
   const handleClearMessages = () => {
     onClearMessages();
-    console.log("🗑️ Cleared all messages");
   };
 
   const clearAllFriendships = () => {
@@ -108,7 +105,6 @@ const DevFunctions = ({
       // 觸發事件通知組件更新
       window.dispatchEvent(new CustomEvent('friendshipsCleared'));
       
-      console.log('✅ All friendships cleared');
       alert('所有好友關係已清除');
     } catch (error) {
       console.error('Error clearing friendships:', error);
@@ -151,9 +147,6 @@ const DevFunctions = ({
         });
       }
       
-      console.log("👥 Overridden localStorage users with users.json data");
-      console.log("📊 Loaded users:", formattedUsers);
-      console.log("🔄 Broadcasted users data to all connected clients");
     } catch (error) {
       console.error("❌ Failed to override users:", error);
     }

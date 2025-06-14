@@ -50,7 +50,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
     wsRef.current = new WebSocket(WS_URL);
 
     wsRef.current.onopen = () => {
-      console.log("WebSocket connected successfully");
 
       wsRef.current.send(
         JSON.stringify({
@@ -72,7 +71,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
 
     wsRef.current.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
-      console.log("Received message:", messageData);
 
       switch (messageData.type) {
         case MESSAGE_TYPES.MESSAGE:
@@ -123,7 +121,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           });
           break;
         case MESSAGE_TYPES.USER_INFO_UPDATED:
-          console.log("User info updated:", messageData.oldUser, "->", messageData.newUser);
           // Update room users using internalId to find the user, then update with new info
           setRoomUsers((prevUsers) => 
             prevUsers.map(user => 
@@ -155,7 +152,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.USERS_DATA_SYNC:
-          console.log("Received users data sync:", messageData.users);
           // Update localStorage with the synced users data
           if (messageData.users) {
             localStorage.setItem('users', JSON.stringify(messageData.users));
@@ -165,11 +161,9 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
               detail: { key: 'users', newValue: JSON.stringify(messageData.users) }
             }));
             
-            console.log("🔄 Synced users data to localStorage");
           }
           break;
         case MESSAGE_TYPES.FRIEND_INVITATION_RECEIVED:
-          console.log("Received friend invitation:", messageData.invitation);
           // Store received invitation in localStorage
           const receivedInvitations = JSON.parse(localStorage.getItem('receivedInvitations') || '[]');
           receivedInvitations.push(messageData.invitation);
@@ -180,7 +174,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.FRIEND_INVITATION_SENT:
-          console.log("Friend invitation sent response:", messageData);
           // Store sent invitation if successful
           if (messageData.success && messageData.invitation) {
             const sentInvitations = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
@@ -193,7 +186,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.FRIEND_INVITATION_ACCEPTED:
-          console.log("Friend invitation accepted:", messageData);
           // Remove invitation from sent invitations if it exists
           const sentInvitations = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
           const updatedSentInvitations = sentInvitations.filter(inv => inv.id !== messageData.invitationId);
@@ -204,7 +196,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.FRIEND_INVITATION_DECLINED:
-          console.log("Friend invitation declined:", messageData);
           // Remove invitation from sent invitations if it exists
           const sentInvitations2 = JSON.parse(localStorage.getItem('sentInvitations') || '[]');
           const updatedSentInvitations2 = sentInvitations2.filter(inv => inv.id !== messageData.invitationId);
@@ -215,7 +206,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.FRIEND_INVITATION_CANCELLED:
-          console.log("Friend invitation cancelled:", messageData);
           // Remove invitation from received invitations if it exists
           const receivedInvitations2 = JSON.parse(localStorage.getItem('receivedInvitations') || '[]');
           const updatedReceivedInvitations = receivedInvitations2.filter(inv => inv.id !== messageData.invitationId);
@@ -226,8 +216,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }));
           break;
         case MESSAGE_TYPES.FRIEND_ADDED:
-          console.log("Friend added:", messageData.newFriend);
-          console.log("Friendship data:", messageData.friendshipData);
           
           // Import friendship utils dynamically
           import('../utils/friendshipUtils.js').then(({ createFriendship }) => {
@@ -254,14 +242,12 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           });
           break;
         case MESSAGE_TYPES.FRIENDS_LIST_SYNC:
-          console.log("Friends list sync:", messageData.friends);
           // Trigger custom event for friends list sync
           window.dispatchEvent(new CustomEvent('friendsListSync', {
             detail: { friendIds: messageData.friends }
           }));
           break;
         default:
-          console.log("Unknown message type:", messageData.type);
       }
     };
 
@@ -270,7 +256,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
     };
 
     wsRef.current.onclose = () => {
-      console.log("WebSocket connection closed");
     };
 
     return () => {

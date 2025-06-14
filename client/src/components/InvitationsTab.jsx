@@ -527,6 +527,7 @@ InvitationsTab.propTypes = {
   onDeclineInvitation: PropTypes.func,
   onCancelInvitation: PropTypes.func,
   onSendInvitation: PropTypes.func,
+  sendMessage: PropTypes.func,
 };
 
 export default InvitationsTab;
