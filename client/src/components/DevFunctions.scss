@@ -125,6 +125,58 @@
     }
   }
 
+  &__user-selector {
+    margin-top: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #495057;
+    }
+  }
+
+  &__current-user {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: #e7f3ff;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+    font-size: 12px;
+    color: #2c3e50;
+
+    strong {
+      color: #007bff;
+    }
+  }
+
+  &__select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    font-size: 13px;
+    color: #495057;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    }
+
+    option {
+      padding: 8px;
+    }
+  }
+
   // Hide in production (optional)
   @media (max-width: 768px) {
     &__panel {

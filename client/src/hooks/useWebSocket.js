@@ -122,6 +122,52 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
             return prevTyping.filter((name) => name !== userName);
           });
           break;
+        case MESSAGE_TYPES.USER_INFO_UPDATED:
+          console.log("User info updated:", messageData.oldUser, "->", messageData.newUser);
+          // Update room users using internalId to find the user, then update with new info
+          setRoomUsers((prevUsers) => 
+            prevUsers.map(user => 
+              user.internalId === messageData.oldUser?.internalId 
+                ? { ...user, ...messageData.newUser }
+                : user
+            )
+          );
+          
+          // Also update localStorage users array to keep it in sync
+          const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+          const updatedUsers = existingUsers.map(user => 
+            user.internalId === messageData.oldUser?.internalId
+              ? { ...user, ...messageData.newUser }
+              : user
+          );
+          localStorage.setItem('users', JSON.stringify(updatedUsers));
+          
+          // Trigger custom event for same-tab localStorage update
+          window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+            detail: { key: 'users', newValue: JSON.stringify(updatedUsers) }
+          }));
+          break;
+        case MESSAGE_TYPES.USER_INFO_UPDATE_ERROR:
+          console.error("User info update error:", messageData.error);
+          // Trigger custom event to notify components about the error
+          window.dispatchEvent(new CustomEvent('userInfoUpdateError', {
+            detail: { error: messageData.error }
+          }));
+          break;
+        case MESSAGE_TYPES.USERS_DATA_SYNC:
+          console.log("Received users data sync:", messageData.users);
+          // Update localStorage with the synced users data
+          if (messageData.users) {
+            localStorage.setItem('users', JSON.stringify(messageData.users));
+            
+            // Trigger custom event for same-tab localStorage update
+            window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+              detail: { key: 'users', newValue: JSON.stringify(messageData.users) }
+            }));
+            
+            console.log("🔄 Synced users data to localStorage");
+          }
+          break;
         default:
           console.log("Unknown message type:", messageData.type);
       }

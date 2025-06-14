@@ -39,6 +39,7 @@ function Login() {
     }
 
     const newUser = {
+      internalId: uuidv4(),
       id: uuidv4(),
       username: username,
       online: true,

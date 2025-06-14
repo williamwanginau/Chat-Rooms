@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import "./InvitationsTab.scss";
+import MESSAGE_TYPES from "../../../shared/messageTypes.json";
 
 const InvitationsTab = ({ 
   receivedInvitations = [], 
@@ -9,7 +10,8 @@ const InvitationsTab = ({
   onAcceptInvitation, 
   onDeclineInvitation,
   onCancelInvitation,
-  onSendInvitation 
+  onSendInvitation,
+  sendMessage 
 }) => {
   const [activeSection, setActiveSection] = useState("received");
   const [newInviteUsername, setNewInviteUsername] = useState("");
@@ -117,13 +119,36 @@ const InvitationsTab = ({
     if (id.length > 20) {
       return "ID must be 20 characters or less";
     }
+    
+    // Enhanced character validation
     if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
       return "ID can only contain letters, numbers, hyphens and underscores";
     }
     
+    // Prevent IDs starting or ending with special characters
+    if (id.startsWith('-') || id.startsWith('_') || id.endsWith('-') || id.endsWith('_')) {
+      return "ID cannot start or end with hyphens or underscores";
+    }
+    
+    // Prevent consecutive special characters
+    if (id.includes('--') || id.includes('__') || id.includes('-_') || id.includes('_-')) {
+      return "ID cannot contain consecutive special characters";
+    }
+    
+    // Prevent reserved words
+    const reservedWords = ['admin', 'system', 'user', 'guest', 'bot', 'null', 'undefined', 'root', 'test', 'demo'];
+    if (reservedWords.includes(id.toLowerCase())) {
+      return "This ID is reserved and cannot be used";
+    }
+    
+    // Must contain at least one letter
+    if (!/[a-zA-Z]/.test(id)) {
+      return "ID must contain at least one letter";
+    }
+    
     // Check if ID is already taken by another user
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const existingUser = users.find(user => user.id === id && user.id !== currentUser.id);
+    const existingUser = users.find(user => user.id === id && user.internalId !== currentUser.internalId);
     if (existingUser) {
       return "This ID is already taken";
     }
@@ -140,21 +165,81 @@ const InvitationsTab = ({
       return;
     }
 
-    // Update currentUser in localStorage
-    const updatedUser = { ...currentUser, id: trimmedId };
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    
-    // Update users array in localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userIndex = users.findIndex(user => user.id === currentUser.id);
-    if (userIndex !== -1) {
-      users[userIndex] = updatedUser;
-      localStorage.setItem("users", JSON.stringify(users));
+    // Send USER_INFO_UPDATED event via WebSocket first for server validation
+    if (sendMessage) {
+      const updatedUser = { ...currentUser, id: trimmedId };
+      const userInfoUpdateMessage = {
+        type: MESSAGE_TYPES.USER_INFO_UPDATED,
+        user: updatedUser,
+        clientTimestamp: new Date().toISOString(),
+      };
+      
+      sendMessage(userInfoUpdateMessage);
+      
+      // Set up event listener for server validation response
+      const handleServerResponse = (event) => {
+        if (event.detail.error) {
+          setSaveError(event.detail.error);
+        } else {
+          // Server validation passed, update localStorage
+          localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+          
+          // Update users array in localStorage
+          const users = JSON.parse(localStorage.getItem("users") || "[]");
+          const userIndex = users.findIndex(user => user.internalId === currentUser.internalId);
+          if (userIndex !== -1) {
+            users[userIndex] = updatedUser;
+            localStorage.setItem("users", JSON.stringify(users));
+          }
+          
+          // Trigger custom events for same-tab localStorage updates
+          window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+            detail: { key: 'currentUser', newValue: JSON.stringify(updatedUser) }
+          }));
+          window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+            detail: { key: 'users', newValue: JSON.stringify(users) }
+          }));
+          
+          // Reset editing state
+          setIsEditingId(false);
+          setEditingId("");
+          setSaveError("");
+        }
+        
+        // Clean up event listener
+        window.removeEventListener('userInfoUpdateError', handleServerResponse);
+      };
+      
+      // Listen for server validation error
+      window.addEventListener('userInfoUpdateError', handleServerResponse);
+      
+      // Set a timeout to clean up the event listener if no response
+      setTimeout(() => {
+        window.removeEventListener('userInfoUpdateError', handleServerResponse);
+      }, 5000);
+    } else {
+      // Fallback for when WebSocket is not available
+      const updatedUser = { ...currentUser, id: trimmedId };
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const userIndex = users.findIndex(user => user.internalId === currentUser.internalId);
+      if (userIndex !== -1) {
+        users[userIndex] = updatedUser;
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+      
+      window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+        detail: { key: 'currentUser', newValue: JSON.stringify(updatedUser) }
+      }));
+      window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+        detail: { key: 'users', newValue: JSON.stringify(users) }
+      }));
+      
+      setIsEditingId(false);
+      setEditingId("");
+      setSaveError("");
     }
-    
-    // Update currentUser prop would require parent component refresh
-    // For now, we'll just refresh the page to reflect changes
-    window.location.reload();
   };
 
   return (

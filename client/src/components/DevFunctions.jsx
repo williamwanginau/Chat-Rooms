@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import "./DevFunctions.scss";
+import MESSAGE_TYPES from "../../../shared/messageTypes.json";
 
 const DevFunctions = ({ 
   onGenerateTestMessages, 
@@ -13,12 +14,65 @@ const DevFunctions = ({
   onRemoveAllVirtualUsers,
   onGenerateFriends,
   onGenerateInvitations,
-  onClearFriendsData
+  onClearFriendsData,
+  sendMessage
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const togglePanel = () => {
     setIsOpen(!isOpen);
+  };
+
+  // Load users and current user from localStorage
+  useEffect(() => {
+    const loadUsers = () => {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const current = JSON.parse(localStorage.getItem("currentUser") || "null");
+      setAvailableUsers(users);
+      setCurrentUser(current);
+    };
+
+    loadUsers();
+    // Refresh when panel opens
+    if (isOpen) {
+      loadUsers();
+    }
+
+    // Listen for localStorage changes to sync user data in real-time
+    const handleStorageChange = (e) => {
+      if (e.key === 'users' || e.key === 'currentUser') {
+        loadUsers();
+      }
+    };
+
+    // Listen for custom events for same-tab localStorage changes
+    const handleCustomStorageChange = (e) => {
+      if (e.detail.key === 'users' || e.detail.key === 'currentUser') {
+        loadUsers();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageUpdate', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageUpdate', handleCustomStorageChange);
+    };
+  }, [isOpen]);
+
+  const handleSwitchUser = (selectedUser) => {
+    localStorage.setItem("currentUser", JSON.stringify(selectedUser));
+    setCurrentUser(selectedUser);
+    
+    // Trigger custom event for same-tab localStorage update
+    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+      detail: { key: 'currentUser', newValue: JSON.stringify(selectedUser) }
+    }));
+    
+    console.log("👤 Switched to user:", selectedUser.username);
   };
 
   const handleGenerateMessages = () => {
@@ -29,6 +83,49 @@ const DevFunctions = ({
   const handleClearMessages = () => {
     onClearMessages();
     console.log("🗑️ Cleared all messages");
+  };
+
+  const handleOverrideUsersFromJson = async () => {
+    try {
+      const response = await fetch('/dummy data/users.json');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users.json');
+      }
+      const jsonUsers = await response.json();
+      
+      // Convert JSON users to localStorage format
+      const formattedUsers = jsonUsers.map(user => ({
+        internalId: user.internalId,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        online: user.online,
+        lastSeen: user.lastSeen,
+        chatRooms: []
+      }));
+      
+      localStorage.setItem("users", JSON.stringify(formattedUsers));
+      
+      // Trigger custom event for same-tab localStorage update
+      window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+        detail: { key: 'users', newValue: JSON.stringify(formattedUsers) }
+      }));
+      
+      // Broadcast users data sync to all connected clients via WebSocket
+      if (sendMessage) {
+        sendMessage({
+          type: MESSAGE_TYPES.USERS_DATA_SYNC,
+          users: formattedUsers,
+          clientTimestamp: new Date().toISOString(),
+        });
+      }
+      
+      console.log("👥 Overridden localStorage users with users.json data");
+      console.log("📊 Loaded users:", formattedUsers);
+      console.log("🔄 Broadcasted users data to all connected clients");
+    } catch (error) {
+      console.error("❌ Failed to override users:", error);
+    }
   };
 
   return (
@@ -141,6 +238,44 @@ const DevFunctions = ({
             </div>
 
             <div className="dev-functions__section">
+              <h4>👤 User Management</h4>
+              <button 
+                className="dev-functions__button"
+                onClick={handleOverrideUsersFromJson}
+                title="Override localStorage users with users.json data"
+              >
+                📂 Load Users from JSON
+              </button>
+              
+              <div className="dev-functions__user-selector">
+                <label htmlFor="user-select">切換用戶身份:</label>
+                {currentUser && (
+                  <p className="dev-functions__current-user">
+                    當前用戶: <strong>{currentUser.username}</strong> (ID: {currentUser.id})
+                  </p>
+                )}
+                <select 
+                  id="user-select"
+                  className="dev-functions__select"
+                  value={currentUser?.id || ""}
+                  onChange={(e) => {
+                    const selectedUser = availableUsers.find(user => user.id === e.target.value);
+                    if (selectedUser) {
+                      handleSwitchUser(selectedUser);
+                    }
+                  }}
+                >
+                  <option value="">選擇用戶...</option>
+                  {availableUsers.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.username} (ID: {user.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="dev-functions__section">
               <h4>🧹 Cleanup</h4>
               <button 
                 className="dev-functions__button dev-functions__button--danger"
@@ -169,6 +304,7 @@ DevFunctions.propTypes = {
   onGenerateFriends: PropTypes.func,
   onGenerateInvitations: PropTypes.func,
   onClearFriendsData: PropTypes.func,
+  sendMessage: PropTypes.func,
 };
 
 export default DevFunctions;

@@ -599,6 +599,7 @@ const Chat = () => {
             onDeclineInvitation={handleDeclineInvitation}
             onCancelInvitation={handleCancelInvitation}
             onSendInvitation={handleSendInvitation}
+            sendMessage={sendMessage}
           />
         );
       default:
@@ -652,6 +653,7 @@ const Chat = () => {
         onGenerateFriends={generateFriends}
         onGenerateInvitations={generateInvitations}
         onClearFriendsData={clearFriendsData}
+        sendMessage={sendMessage}
       />
     </div>
   );
