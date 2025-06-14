@@ -1,9 +1,11 @@
-import RoomsList from "./RoomsList";
 import MessagesList from "./MessagesList";
 import MembersList from "./MembersList";
 import RoomHeader from "./RoomHeader";
-import TypingIndicator from "./TypingIndicator";
 import DevFunctions from "../../components/DevFunctions";
+import TabNavigation from "../../components/TabNavigation";
+import FriendsTab from "../../components/FriendsTab";
+import RoomsTab from "../../components/RoomsTab";
+import InvitationsTab from "../../components/InvitationsTab";
 import "./ChatPage.scss";
 import { useState, useEffect } from "react";
 import useWebSocket from "../../hooks/useWebSocket";
@@ -13,6 +15,10 @@ import PropTypes from "prop-types";
 const Chat = () => {
   const [selectedRoomId, setSelectedRoomId] = useState("sport");
   const [customRooms, setCustomRooms] = useState([]);
+  const [activeTab, setActiveTab] = useState("rooms");
+  const [friends, setFriends] = useState([]);
+  const [receivedInvitations, setReceivedInvitations] = useState([]);
+  const [sentInvitations, setSentInvitations] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
   const { messages, setMessages, roomUsers, typingUsers, sendMessage, joinRoom } =
@@ -406,6 +412,142 @@ const Chat = () => {
     }
   };
 
+  // Friends related handlers
+  const handleStartChat = (friend) => {
+    // TODO: Implement private chat functionality
+    console.log("Starting chat with:", friend);
+    alert(`Start chat with ${friend.name} feature not yet implemented`);
+  };
+
+  const handleRemoveFriend = (friend) => {
+    // TODO: Implement friend removal
+    console.log("Removing friend:", friend);
+    alert(`Remove friend ${friend.name} feature not yet implemented`);
+  };
+
+  const handleAcceptInvitation = (invitation) => {
+    // TODO: Implement invitation acceptance
+    console.log("Accepting invitation:", invitation);
+    alert(`Accept friend invitation from ${invitation.from.name} feature not yet implemented`);
+  };
+
+  const handleDeclineInvitation = (invitation) => {
+    // TODO: Implement invitation decline
+    console.log("Declining invitation:", invitation);
+    alert(`Decline friend invitation from ${invitation.from.name} feature not yet implemented`);
+  };
+
+  const handleCancelInvitation = (invitation) => {
+    // TODO: Implement invitation cancellation
+    console.log("Canceling invitation:", invitation);
+    alert(`Cancel friend invitation to ${invitation.to.name} feature not yet implemented`);
+  };
+
+  const handleSendInvitation = (username) => {
+    // TODO: Implement sending friend invitation
+    console.log("Sending invitation to:", username);
+    alert(`Send friend invitation to ${username} feature not yet implemented`);
+  };
+
+  // Dev tools handlers
+  const generateFriends = () => {
+    const mockFriends = [
+      {
+        id: "friend1",
+        name: "Alice Wang",
+        username: "alice_w",
+        status: "online",
+        avatar: "👩",
+        lastSeen: new Date().toISOString()
+      },
+      {
+        id: "friend2", 
+        name: "Bob Chen",
+        username: "bob_chen",
+        status: "away",
+        avatar: "👨",
+        lastSeen: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+      },
+      {
+        id: "friend3",
+        name: "Carol Li",
+        username: "carol_l",
+        status: "offline",
+        avatar: "👩‍💼",
+        lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: "friend4",
+        name: "David Zhang",
+        username: "david_z",
+        status: "online",
+        avatar: "👨‍💻",
+        lastSeen: new Date().toISOString()
+      }
+    ];
+
+    setFriends(mockFriends);
+    console.log("👥 Generated mock friends data");
+  };
+
+  const generateInvitations = () => {
+    const mockReceivedInvitations = [
+      {
+        id: "inv1",
+        from: {
+          id: "user1",
+          name: "Emma Liu",
+          username: "emma_l",
+          avatar: "👩‍🎨"
+        },
+        message: "Hi! Would you like to be friends?",
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: "inv2",
+        from: {
+          id: "user2", 
+          name: "James Wu",
+          username: "james_wu",
+          avatar: "👨‍🚀"
+        },
+        message: "Want to be friends!",
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    const mockSentInvitations = [
+      {
+        id: "sent1",
+        to: {
+          id: "user3",
+          name: "Sophie Chen",
+          username: "sophie_c",
+          avatar: "👩‍💼"
+        },
+        message: "Hello! Would you like to add me as a friend?",
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        status: "pending"
+      }
+    ];
+
+    setReceivedInvitations(mockReceivedInvitations);
+    setSentInvitations(mockSentInvitations);
+    console.log("📨 Generated mock invitations data");
+  };
+
+  const clearFriendsData = () => {
+    setFriends([]);
+    setReceivedInvitations([]);
+    setSentInvitations([]);
+    console.log("🗑️ Cleared all friends and invitations data");
+  };
+
+  // Tab change handler
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+  };
+
   const DEFAULT_ROOMS = [
     { id: "sport", name: "Sports Room", description: "Discuss sports topics" },
     {
@@ -425,18 +567,55 @@ const Chat = () => {
     customRooms.find((room) => room.id === selectedRoomId) ||
     { id: selectedRoomId, name: selectedRoomId, description: "Unknown Room" };
 
+  // Render tab content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "friends":
+        return (
+          <FriendsTab
+            friends={friends}
+            onStartChat={handleStartChat}
+            onRemoveFriend={handleRemoveFriend}
+          />
+        );
+      case "rooms":
+        return (
+          <RoomsTab
+            onRoomSelect={handleRoomSelect}
+            currentRoomId={selectedRoomId}
+            defaultRooms={DEFAULT_ROOMS}
+            customRooms={customRooms}
+            onCreateRoom={handleCreateRoom}
+            onJoinRoom={handleJoinRoom}
+          />
+        );
+      case "invitations":
+        return (
+          <InvitationsTab
+            receivedInvitations={receivedInvitations}
+            sentInvitations={sentInvitations}
+            currentUser={currentUser}
+            onAcceptInvitation={handleAcceptInvitation}
+            onDeclineInvitation={handleDeclineInvitation}
+            onCancelInvitation={handleCancelInvitation}
+            onSendInvitation={handleSendInvitation}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="chat">
       <div className="chat__sidebar">
-        <RoomsList
-          className="chat__rooms"
-          onRoomSelect={handleRoomSelect}
-          currentRoomId={selectedRoomId}
-          defaultRooms={DEFAULT_ROOMS}
-          customRooms={customRooms}
-          onCreateRoom={handleCreateRoom}
-          onJoinRoom={handleJoinRoom}
+        <TabNavigation
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
         />
+        <div className="chat__tab-content">
+          {renderTabContent()}
+        </div>
       </div>
       <div className="chat__main">
         <RoomHeader className="chat__header" selectedRoom={selectedRoom} />
@@ -470,6 +649,9 @@ const Chat = () => {
         onSimulateUserJoinLeave={simulateUserJoinLeave}
         onSimulateGradualUserJoin={simulateGradualUserJoin}
         onRemoveAllVirtualUsers={removeAllVirtualUsers}
+        onGenerateFriends={generateFriends}
+        onGenerateInvitations={generateInvitations}
+        onClearFriendsData={clearFriendsData}
       />
     </div>
   );

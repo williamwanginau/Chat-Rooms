@@ -16,6 +16,15 @@
         border-right: 1px solid var(--border-color);
         height: 100vh;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__tab-content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     &__rooms {

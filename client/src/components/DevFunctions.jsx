@@ -10,7 +10,10 @@ const DevFunctions = ({
   onGenerateLongMessages,
   onSimulateUserJoinLeave,
   onSimulateGradualUserJoin,
-  onRemoveAllVirtualUsers
+  onRemoveAllVirtualUsers,
+  onGenerateFriends,
+  onGenerateInvitations,
+  onClearFriendsData
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -111,6 +114,33 @@ const DevFunctions = ({
             </div>
 
             <div className="dev-functions__section">
+              <h4>👨‍👩‍👧‍👦 Friends & Invitations</h4>
+              <button 
+                className="dev-functions__button"
+                onClick={() => onGenerateFriends?.()}
+                title="Generate mock friends data for testing"
+              >
+                👥 Generate Friends
+              </button>
+              
+              <button 
+                className="dev-functions__button"
+                onClick={() => onGenerateInvitations?.()}
+                title="Generate mock invitations data for testing"
+              >
+                📨 Generate Invitations
+              </button>
+              
+              <button 
+                className="dev-functions__button dev-functions__button--danger"
+                onClick={() => onClearFriendsData?.()}
+                title="Clear all friends and invitations data"
+              >
+                🗑️ Clear Friends Data
+              </button>
+            </div>
+
+            <div className="dev-functions__section">
               <h4>🧹 Cleanup</h4>
               <button 
                 className="dev-functions__button dev-functions__button--danger"
@@ -136,6 +166,9 @@ DevFunctions.propTypes = {
   onSimulateUserJoinLeave: PropTypes.func,
   onSimulateGradualUserJoin: PropTypes.func,
   onRemoveAllVirtualUsers: PropTypes.func,
+  onGenerateFriends: PropTypes.func,
+  onGenerateInvitations: PropTypes.func,
+  onClearFriendsData: PropTypes.func,
 };
 
 export default DevFunctions;
