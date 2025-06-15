@@ -1,46 +1,42 @@
 [
   {
-    "internalId": "a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e",
-    "id": "1",
-    "username": "Alice",
+    "id": "a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e",
+    "username": "alice1234",
+    "name": "Alice",
     "email": "alice@example.com",
     "online": true,
     "lastSeen": "2023-10-01T10:00:00Z",
-    "friends": [
-      "c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f"
-    ]
+    "friends": ["c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f"]
   },
   {
-    "internalId": "b3d4f5a6-7c8e-4a1b-9f2d-8c5e7a4b6f9a",
-    "id": "2",
-    "username": "Bob",
+    "id": "b3d4f5a6-7c8e-4a1b-9f2d-8c5e7a4b6f9a",
+    "username": "bob1234",
+    "name": "Bob",
     "email": "bob@example.com",
     "online": false,
     "lastSeen": "2023-10-01T09:30:00Z"
   },
   {
-    "internalId": "c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f",
-    "id": "3",
-    "username": "Charlie",
+    "id": "c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f",
+    "username": "charlie1234",
+    "name": "Charlie",
     "email": "charlie@example.com",
     "online": true,
     "lastSeen": "2023-10-01T08:45:00Z",
-    "friends": [
-      "a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e"
-    ]
+    "friends": ["a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e"]
   },
   {
-    "internalId": "d5a7c3f9-8e4b-4d6a-9c2e-6f8a3d5c7b9e",
-    "id": "4",
-    "username": "David",
+    "id": "d5a7c3f9-8e4b-4d6a-9c2e-6f8a3d5c7b9e",
+    "username": "david1234",
+    "name": "David",
     "email": "david@example.com",
     "online": false,
     "lastSeen": "2023-10-01T07:20:00Z"
   },
   {
-    "internalId": "e8b4d6a2-9f5c-4e7b-8d3a-5c7e9b2d4a6f",
-    "id": "5",
-    "username": "Eve",
+    "id": "e8b4d6a2-9f5c-4e7b-8d3a-5c7e9b2d4a6f",
+    "username": "eve1234",
+    "name": "Eve",
     "email": "eve@example.com",
     "online": true,
     "lastSeen": "2023-10-01T06:50:00Z"

@@ -23,21 +23,21 @@ const InvitationsTab = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Helper function to get user info by internal ID
-  const getUserByInternalId = (internalId) => {
+  // Helper function to get user info by ID
+  const getUserById = (id) => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    return users.find(user => user.internalId === internalId);
+    return users.find(user => user.id === id);
   };
 
   // Helper function to enrich invitations with user info
   const enrichInvitation = (invitation) => {
-    const fromUser = getUserByInternalId(invitation.fromUserId);
-    const toUser = getUserByInternalId(invitation.toUserId);
+    const fromUser = getUserById(invitation.fromUserId);
+    const toUser = getUserById(invitation.toUserId);
     
     return {
       ...invitation,
-      from: fromUser || { username: "Unknown User", avatar: "👤", name: "Unknown" },
-      to: toUser || { username: "Unknown User", avatar: "👤", name: "Unknown" }
+      from: fromUser || { username: "unknown", avatar: "👤", name: "Unknown" },
+      to: toUser || { username: "unknown", avatar: "👤", name: "Unknown" }
     };
   };
 
@@ -81,10 +81,10 @@ const InvitationsTab = ({
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const searchTerm = query.toLowerCase();
     
-    // Search for exact ID match only
+    // Search for exact username match only
     const matches = users.filter(user => {
       if (user.id === currentUser?.id) return false; // Exclude current user
-      return user.id === query; // Exact match only
+      return user.username === query; // Exact match only
     });
     setSearchResults(matches.slice(0, 10)); // Show up to 10 results
     setIsSearching(false);
@@ -164,11 +164,11 @@ const InvitationsTab = ({
       return "ID must contain at least one letter";
     }
     
-    // Check if ID is already taken by another user
+    // Check if username is already taken by another user
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const existingUser = users.find(user => user.id === id && user.internalId !== currentUser.internalId);
+    const existingUser = users.find(user => user.username === id && user.id !== currentUser.id);
     if (existingUser) {
-      return "This ID is already taken";
+      return "This username is already taken";
     }
     
     return null;
@@ -185,7 +185,7 @@ const InvitationsTab = ({
 
     // Send USER_INFO_UPDATED event via WebSocket first for server validation
     if (sendMessage) {
-      const updatedUser = { ...currentUser, id: trimmedId };
+      const updatedUser = { ...currentUser, username: trimmedId };
       const userInfoUpdateMessage = {
         type: MESSAGE_TYPES.USER_INFO_UPDATED,
         user: updatedUser,

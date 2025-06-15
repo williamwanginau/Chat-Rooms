@@ -11,6 +11,10 @@ class Chatroom {
     this.description = metadata.description || "";
     this.isCustom = metadata.isCustom || false;
     this.createdAt = metadata.createdAt || new Date().toISOString();
+    
+    // Room type: 'private', 'group'
+    this.type = metadata.type || 'private';
+    this.participants = metadata.participants || [];
   }
 
   addClient(ws) {

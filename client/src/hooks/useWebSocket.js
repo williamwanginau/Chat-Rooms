@@ -15,8 +15,8 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
         id: roomId,
       },
       user: {
-        id: user.id,
-        name: user.username,
+        username: user.username,
+        name: user.name,
       },
       clientTimestamp: new Date().toISOString(),
     };
@@ -75,6 +75,18 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
       switch (messageData.type) {
         case MESSAGE_TYPES.MESSAGE:
           setMessages((prevMessages) => [...prevMessages, messageData]);
+          
+          // Trigger custom event to update room's last message
+          if (!messageData.isSystemMessage && messageData.room?.id) {
+            window.dispatchEvent(new CustomEvent('newMessage', {
+              detail: { 
+                roomId: messageData.room.id,
+                message: messageData.message,
+                timestamp: messageData.clientTimestamp,
+                sender: messageData.sender?.name || messageData.sender?.username || 'Unknown'
+              }
+            }));
+          }
           break;
         case MESSAGE_TYPES.ROOM_USERS:
           setRoomUsers(messageData.users);
@@ -93,7 +105,7 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           break;
         case MESSAGE_TYPES.USER_LEFT:
           setRoomUsers((prevUsers) =>
-            prevUsers.filter((user) => user.id !== messageData.user.id)
+            prevUsers.filter((user) => user.username !== messageData.user.username)
           );
           // Add system message for user leaving
           const leaveUserName = messageData.user.name || messageData.user.username || 'Unknown User';
@@ -121,10 +133,10 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           });
           break;
         case MESSAGE_TYPES.USER_INFO_UPDATED:
-          // Update room users using internalId to find the user, then update with new info
+          // Update room users using id to find the user, then update with new info
           setRoomUsers((prevUsers) => 
             prevUsers.map(user => 
-              user.internalId === messageData.oldUser?.internalId 
+              user.id === messageData.oldUser?.id 
                 ? { ...user, ...messageData.newUser }
                 : user
             )
@@ -133,7 +145,7 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           // Also update localStorage users array to keep it in sync
           const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
           const updatedUsers = existingUsers.map(user => 
-            user.internalId === messageData.oldUser?.internalId
+            user.id === messageData.oldUser?.id
               ? { ...user, ...messageData.newUser }
               : user
           );
@@ -245,6 +257,12 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           // Trigger custom event for friends list sync
           window.dispatchEvent(new CustomEvent('friendsListSync', {
             detail: { friendIds: messageData.friends }
+          }));
+          break;
+        case MESSAGE_TYPES.PRIVATE_CHAT_CREATED:
+          // Trigger custom event for private chat created
+          window.dispatchEvent(new CustomEvent('privateChatCreated', {
+            detail: { roomInfo: messageData.roomInfo }
           }));
           break;
         default:

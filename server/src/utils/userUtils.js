@@ -16,35 +16,33 @@ class UserUtils {
     }
   }
 
-  // Find user by external ID (like "1", "Charlie")
-  async getUserByExternalId(externalId) {
+  // Find user by username (external identifier)
+  async getUserByUsername(username) {
     const users = await this.loadUsers();
-    return users.find(user => 
-      user.id === externalId || user.username === externalId
-    );
+    return users.find(user => user.username === username);
   }
 
-  // Find user by internal UUID
-  async getUserByInternalId(internalId) {
+  // Find user by ID (internal UUID)
+  async getUserById(id) {
     const users = await this.loadUsers();
-    return users.find(user => user.internalId === internalId);
+    return users.find(user => user.id === id);
   }
 
-  // Convert external ID to internal UUID
-  async getInternalIdFromExternal(externalId) {
-    const user = await this.getUserByExternalId(externalId);
-    return user ? user.internalId : null;
-  }
-
-  // Convert internal UUID to external ID  
-  async getExternalIdFromInternal(internalId) {
-    const user = await this.getUserByInternalId(internalId);
+  // Convert username to UUID
+  async getIdFromUsername(username) {
+    const user = await this.getUserByUsername(username);
     return user ? user.id : null;
   }
 
-  // Get full user info and return it with internal ID structure
-  async getUserInfoWithInternalId(externalId) {
-    return await this.getUserByExternalId(externalId);
+  // Convert UUID to username
+  async getUsernameFromId(id) {
+    const user = await this.getUserById(id);
+    return user ? user.username : null;
+  }
+
+  // Get full user info by username
+  async getUserInfoByUsername(username) {
+    return await this.getUserByUsername(username);
   }
 }
 
@@ -52,7 +50,7 @@ const userUtils = new UserUtils();
 
 module.exports = {
   userUtils,
-  getUserByExternalId: (externalId) => userUtils.getUserByExternalId(externalId),
-  getInternalIdFromExternal: (externalId) => userUtils.getInternalIdFromExternal(externalId),
-  getUserInfoWithInternalId: (externalId) => userUtils.getUserInfoWithInternalId(externalId)
+  getUserByUsername: (username) => userUtils.getUserByUsername(username),
+  getIdFromUsername: (username) => userUtils.getIdFromUsername(username),
+  getUserInfoByUsername: (username) => userUtils.getUserInfoByUsername(username)
 };

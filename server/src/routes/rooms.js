@@ -28,7 +28,7 @@ const setupRoomRoutes = (rooms) => {
 
   // Create a new room
   router.post("/create", (req, res) => {
-    const { id, name, description } = req.body;
+    const { id, name, description, type, participants } = req.body;
 
     // Validate input
     if (!id || !name) {
@@ -48,7 +48,9 @@ const setupRoomRoutes = (rooms) => {
         name: name.trim(),
         description: description?.trim() || "",
         isCustom: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        type: type || 'group',
+        participants: participants || []
       });
 
       // Add to rooms map
@@ -61,7 +63,9 @@ const setupRoomRoutes = (rooms) => {
         name: room.name,
         description: room.description,
         isCustom: room.isCustom,
-        createdAt: room.createdAt
+        createdAt: room.createdAt,
+        type: room.type,
+        participants: room.participants
       });
     } catch (error) {
       console.error("Error creating room:", error);
@@ -93,7 +97,9 @@ const setupRoomRoutes = (rooms) => {
       description: room.description || "",
       isCustom: room.isCustom || false,
       createdAt: room.createdAt || null,
-      userCount: room.clients.size
+      userCount: room.clients.size,
+      type: room.type || 'private',
+      participants: room.participants || []
     });
   });
 

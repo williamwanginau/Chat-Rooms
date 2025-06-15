@@ -29,8 +29,8 @@ export const createFriendship = (user1Id, user2Id, initiatedBy) => {
     };
 
     // 4. 更新用戶的好友列表
-    const user1 = users.find(u => u.internalId === user1Id);
-    const user2 = users.find(u => u.internalId === user2Id);
+    const user1 = users.find(u => u.id === user1Id);
+    const user2 = users.find(u => u.id === user2Id);
 
     if (!user1 || !user2) {
       console.error('One or both users not found');
@@ -59,7 +59,7 @@ export const createFriendship = (user1Id, user2Id, initiatedBy) => {
       detail: { friendship, user1, user2 }
     }));
 
-    console.log(`Friendship created between ${user1.username} and ${user2.username}`);
+    console.log(`Friendship created between ${user1.name} and ${user2.name}`);
     return friendship;
 
   } catch (error) {
@@ -72,7 +72,7 @@ export const createFriendship = (user1Id, user2Id, initiatedBy) => {
 export const getUserFriends = (userId) => {
   try {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find(u => u.internalId === userId);
+    const user = users.find(u => u.id === userId);
     return user?.friends || [];
   } catch (error) {
     console.error('Error getting user friends:', error);
@@ -86,9 +86,14 @@ export const getUserFriendsInfo = (userId) => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const friendIds = getUserFriends(userId);
     
-    return friendIds.map(friendId => 
-      users.find(u => u.internalId === friendId)
-    ).filter(Boolean); // 過濾掉找不到的用戶
+    return friendIds.map(friendId => {
+      const friend = users.find(u => u.id === friendId);
+      if (!friend) {
+        console.warn(`Friend with ID ${friendId} not found in users list`);
+        return null;
+      }
+      return friend;
+    }).filter(Boolean); // 過濾掉找不到的用戶
   } catch (error) {
     console.error('Error getting user friends info:', error);
     return [];
