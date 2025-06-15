@@ -1,11 +1,11 @@
 import PropTypes from "prop-types";
 import "./TabNavigation.scss";
 
-const TabNavigation = ({ activeTab, onTabChange }) => {
+const TabNavigation = ({ activeTab, onTabChange, unreadCounts = {} }) => {
   const tabs = [
-    { id: "friends", label: "Friends", icon: "👥" },
-    { id: "rooms", label: "Rooms", icon: "💬" },
-    { id: "invitations", label: "Invites", icon: "📨" }
+    { id: "friends", label: "好友", icon: "👥" },
+    { id: "rooms", label: "聊天", icon: "💬" },
+    { id: "invitations", label: "邀請", icon: "📨" }
   ];
 
   return (
@@ -21,6 +21,11 @@ const TabNavigation = ({ activeTab, onTabChange }) => {
           >
             <span className="tab-navigation__tab-icon">{tab.icon}</span>
             <span className="tab-navigation__tab-label">{tab.label}</span>
+            {unreadCounts[tab.id] > 0 && (
+              <span className="tab-navigation__badge">
+                {unreadCounts[tab.id] > 99 ? '99+' : unreadCounts[tab.id]}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -31,6 +36,7 @@ const TabNavigation = ({ activeTab, onTabChange }) => {
 TabNavigation.propTypes = {
   activeTab: PropTypes.string.isRequired,
   onTabChange: PropTypes.func.isRequired,
+  unreadCounts: PropTypes.object,
 };
 
 export default TabNavigation;

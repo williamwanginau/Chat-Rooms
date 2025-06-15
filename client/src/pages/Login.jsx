@@ -30,7 +30,7 @@ function Login() {
       users = [];
     }
 
-    const existingUser = users?.find((user) => user.username === username);
+    const existingUser = users?.find((user) => user.name === username);
     if (existingUser) {
       localStorage.setItem("currentUser", JSON.stringify(existingUser));
       toast.success("Login successful");
@@ -39,9 +39,9 @@ function Login() {
     }
 
     const newUser = {
-      internalId: uuidv4(),
       id: uuidv4(),
-      username: username,
+      username: username, // Use the entered username
+      name: username,
       online: true,
       lastSeen: Date.now().toString(),
       chatRooms: [],

@@ -2,39 +2,38 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 8px;
+  background-color: #2c2c2e;
   
   &__header {
     flex-shrink: 0;
-    margin-bottom: 12px;
-  }
-  
-  &__title {
-    font-size: 14px;
-    color: #666;
-    margin: 0 0 8px 12px;
-    font-weight: 500;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3a3a3c;
   }
   
   &__search {
-    padding: 0 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #1c1c1e;
+    border-radius: 8px;
+    padding: 8px 12px;
+    
+    &-icon {
+      color: #8e8e93;
+      font-size: 20px;
+      margin-right: 8px;
+    }
     
     &-input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 13px;
-      background: #f8f8f8;
-      
-      &:focus {
-        outline: none;
-        border-color: #007bff;
-        background: #fff;
-      }
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      color: #ffffff;
+      outline: none;
       
       &::placeholder {
-        color: #999;
+        color: #8e8e93;
       }
     }
   }
@@ -45,100 +44,117 @@
     min-height: 0;
   }
   
+  &__section {
+    &-header {
+      padding: 16px 16px 8px 16px;
+      border-bottom: 1px solid #3a3a3c;
+    }
+    
+    &-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+  
   &__list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding-right: 4px;
   }
   
   &__item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s ease;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #3a3a3c;
     
     &:hover {
-      background: #f8f8f8;
-      border-color: #ccc;
+      background-color: #3a3a3c;
+    }
+    
+    &:last-child {
+      border-bottom: none;
     }
   }
   
   &__item-avatar {
     position: relative;
     flex-shrink: 0;
+    margin-right: 12px;
   }
   
   &__avatar {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: #f0f0f0;
+    width: 48px;
+    height: 48px;
+    background: #3a3a3c;
     border-radius: 50%;
-    font-size: 18px;
+    color: #8e8e93;
+    font-size: 16px;
+    
+    .material-icons {
+      font-size: 24px;
+    }
   }
   
   &__status {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 2px solid #2c2c2e;
     
     &--online {
-      background: #28a745;
+      background: #00c73c;
     }
     
     &--away {
-      background: #ffc107;
+      background: #ff9500;
     }
     
     &--offline {
-      background: #6c757d;
+      background: #8e8e93;
     }
   }
   
   &__item-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   
   &__item-name {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 500;
-    color: #333;
-    margin: 0 0 2px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  &__item-username {
-    font-size: 11px;
-    color: #666;
-    margin: 0 0 2px 0;
+    color: #ffffff;
+    margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   
   &__item-status {
-    font-size: 10px;
-    color: #999;
+    font-size: 13px;
+    color: #8e8e93;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   &__item-actions {
     display: flex;
-    gap: 4px;
+    align-items: center;
     flex-shrink: 0;
   }
   
@@ -146,27 +162,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     border: none;
-    border-radius: 4px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 12px;
+    background: transparent;
+    color: #8e8e93;
     transition: all 0.2s ease;
     
-    &--chat {
-      background: #e3f2fd;
-      
-      &:hover {
-        background: #bbdefb;
-      }
+    &:hover {
+      background-color: #48484a;
+      color: #ffffff;
     }
     
-    &--remove {
-      background: #ffebee;
-      
+    .material-icons {
+      font-size: 18px;
+    }
+    
+    &--more {
       &:hover {
-        background: #ffcdd2;
+        background-color: #48484a;
       }
     }
   }
@@ -176,9 +192,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 60px 20px;
     text-align: center;
-    color: #999;
+    color: #8e8e93;
   }
   
   &__empty-icon {
@@ -188,8 +204,9 @@
   }
   
   &__empty-text {
-    font-size: 13px;
+    font-size: 16px;
     margin: 0;
+    color: #a0a0a2;
   }
 }
 
@@ -197,54 +214,67 @@
 @media (max-width: 992px) {
   .friends-tab {
     &__item {
-      padding: 10px;
-      gap: 10px;
+      padding: 10px 12px;
     }
     
     &__avatar {
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
+      width: 42px;
+      height: 42px;
+      
+      .material-icons {
+        font-size: 20px;
+      }
     }
     
     &__status {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
     }
   }
 }
 
 @media (max-width: 768px) {
   .friends-tab {
-    padding: 6px;
+    &__header {
+      padding: 8px 12px;
+    }
+    
+    &__search {
+      padding: 6px 10px;
+    }
+    
+    &__section-header {
+      padding: 12px 12px 6px 12px;
+    }
     
     &__item {
-      padding: 8px;
-      gap: 8px;
+      padding: 8px 12px;
     }
     
     &__avatar {
-      width: 28px;
-      height: 28px;
-      font-size: 14px;
+      width: 36px;
+      height: 36px;
+      
+      .material-icons {
+        font-size: 18px;
+      }
     }
     
     &__item-name {
-      font-size: 12px;
-    }
-    
-    &__item-username {
-      font-size: 10px;
+      font-size: 14px;
     }
     
     &__item-status {
-      font-size: 9px;
+      font-size: 12px;
     }
     
     &__action-btn {
-      width: 20px;
-      height: 20px;
-      font-size: 10px;
+      width: 28px;
+      height: 28px;
+      
+      .material-icons {
+        font-size: 16px;
+      }
     }
   }
 }

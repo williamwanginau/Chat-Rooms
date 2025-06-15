@@ -2,7 +2,7 @@ import MessagesList from "./MessagesList";
 import MembersList from "./MembersList";
 import RoomHeader from "./RoomHeader";
 import DevFunctions from "../../components/DevFunctions";
-import TabNavigation from "../../components/TabNavigation";
+import VerticalNavigation from "../../components/VerticalNavigation";
 import FriendsTab from "../../components/FriendsTab";
 import RoomsTab from "../../components/RoomsTab";
 import InvitationsTab from "../../components/InvitationsTab";
@@ -14,9 +14,9 @@ import PropTypes from "prop-types";
 import { getUserFriendsInfo } from "../../utils/friendshipUtils";
 
 const Chat = () => {
-  const [selectedRoomId, setSelectedRoomId] = useState("sport");
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [customRooms, setCustomRooms] = useState([]);
-  const [activeTab, setActiveTab] = useState("rooms");
+  const [activeSection, setActiveSection] = useState("rooms");
   const [friends, setFriends] = useState([]);
   const [receivedInvitations, setReceivedInvitations] = useState([]);
   const [sentInvitations, setSentInvitations] = useState([]);
@@ -24,6 +24,51 @@ const Chat = () => {
 
   const { messages, setMessages, roomUsers, typingUsers, sendMessage, joinRoom } =
     useWebSocket(currentUser, selectedRoomId);
+
+  // Update room's last message when messages change
+  useEffect(() => {
+    if (messages.length > 0 && selectedRoomId) {
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage.isSystemMessage) {
+        setCustomRooms(prev => prev.map(room => 
+          room.id === selectedRoomId 
+            ? { 
+                ...room, 
+                lastMessage: lastMessage.message,
+                lastMessageTime: lastMessage.clientTimestamp,
+                lastMessageSender: lastMessage.sender?.name || lastMessage.sender?.username || 'Unknown',
+                unreadCount: 0 // Reset unread count for current room
+              }
+            : room
+        ));
+      }
+    }
+  }, [messages, selectedRoomId]);
+
+  // Handle new messages from other rooms (for unread count)
+  useEffect(() => {
+    const handleNewMessage = (event) => {
+      const { roomId, message, timestamp, sender } = event.detail;
+      
+      // Only update unread count if the message is not from the currently selected room
+      if (roomId !== selectedRoomId) {
+        setCustomRooms(prev => prev.map(room => 
+          room.id === roomId 
+            ? { 
+                ...room, 
+                lastMessage: message,
+                lastMessageTime: timestamp,
+                lastMessageSender: sender,
+                unreadCount: (room.unreadCount || 0) + 1
+              }
+            : room
+        ));
+      }
+    };
+
+    window.addEventListener('newMessage', handleNewMessage);
+    return () => window.removeEventListener('newMessage', handleNewMessage);
+  }, [selectedRoomId]);
 
   // Load invitations from localStorage on component mount
   useEffect(() => {
@@ -50,10 +95,11 @@ const Chat = () => {
 
     // Load friends from user object instead of separate localStorage key
     if (currentUser) {
-      const userFriends = getUserFriendsInfo(currentUser.internalId);
+      const userFriends = getUserFriendsInfo(currentUser.id);
       setFriends(userFriends.map(friend => ({
-        id: friend.internalId,
-        name: friend.username,
+        id: friend.id,
+        name: friend.name || friend.username || 'Unknown User',
+        username: friend.username || 'unknown',
         avatar: friend.avatar || "/default-avatar.png",
         status: friend.online ? "online" : "offline",
         statusTimestamp: friend.lastSeen || new Date().toISOString()
@@ -130,8 +176,8 @@ const Chat = () => {
         const updated = [...prev, {
           id: newFriend.id,
           name: newFriend.name || newFriend.username,
-          username: newFriend.id,
-          email: newFriend.email || `${newFriend.id}@example.com`,
+          username: newFriend.username,
+          email: newFriend.email || `${newFriend.username}@example.com`,
           avatar: newFriend.avatar || "/default-avatar.png",
           status: "online",
           statusTimestamp: new Date().toISOString()
@@ -143,18 +189,58 @@ const Chat = () => {
     const handleFriendsListSync = (event) => {
       const { friendIds } = event.detail;
       
-      // Convert friend IDs to friend objects
-      const syncedFriends = friendIds.map(friendId => ({
-        id: friendId,
-        name: friendId, // We only have the ID, use it as name for now
-        username: friendId,
-        email: `${friendId}@example.com`,
-        avatar: "/default-avatar.png",
-        status: "offline", // Default to offline, will be updated if they're online
-        statusTimestamp: new Date().toISOString()
-      }));
+      // Get full user info for each friend ID
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const syncedFriends = friendIds.map(friendId => {
+        const friendUser = users.find(user => user.id === friendId);
+        return friendUser ? {
+          id: friendUser.id,
+          name: friendUser.name,
+          username: friendUser.username,
+          email: friendUser.email,
+          avatar: friendUser.avatar || "/default-avatar.png",
+          status: friendUser.online ? "online" : "offline",
+          statusTimestamp: friendUser.lastSeen || new Date().toISOString()
+        } : {
+          id: friendId,
+          name: "Unknown User",
+          username: "unknown",
+          avatar: "/default-avatar.png",
+          status: "offline",
+          statusTimestamp: new Date().toISOString()
+        };
+      });
       
       setFriends(syncedFriends);
+    };
+
+    const handlePrivateChatCreated = (event) => {
+      const { roomInfo } = event.detail;
+      
+      // Add the new private chat room to customRooms if not already present
+      setCustomRooms(prev => {
+        const exists = prev.some(room => room.id === roomInfo.id);
+        if (exists) {
+          return prev;
+        }
+        return [...prev, roomInfo];
+      });
+    };
+
+    const handleNewMessage = (event) => {
+      const { roomId, message, timestamp, sender } = event.detail;
+      
+      // Update room's last message info
+      setCustomRooms(prev => prev.map(room => 
+        room.id === roomId 
+          ? { 
+              ...room, 
+              lastMessage: message,
+              lastMessageTime: timestamp,
+              lastMessageSender: sender
+            }
+          : room
+      ));
     };
 
     // Add event listeners
@@ -165,6 +251,8 @@ const Chat = () => {
     window.addEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
     window.addEventListener('friendAdded', handleFriendAdded);
     window.addEventListener('friendsListSync', handleFriendsListSync);
+    window.addEventListener('privateChatCreated', handlePrivateChatCreated);
+    window.addEventListener('newMessage', handleNewMessage);
 
     // Cleanup event listeners
     return () => {
@@ -175,6 +263,7 @@ const Chat = () => {
       window.removeEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
       window.removeEventListener('friendAdded', handleFriendAdded);
       window.removeEventListener('friendsListSync', handleFriendsListSync);
+      window.removeEventListener('privateChatCreated', handlePrivateChatCreated);
     };
   }, []);
 
@@ -189,7 +278,50 @@ const Chat = () => {
         console.error("Failed to parse saved custom rooms:", error);
       }
     }
+    
+    // Load private chat rooms for current user
+    loadPrivateChatRooms();
   }, []);
+
+  // Load private chat rooms that the current user is part of
+  const loadPrivateChatRooms = async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Check for private rooms with friends
+      const userFriends = getUserFriendsInfo(currentUser.id);
+      const privateRooms = [];
+      
+      for (const friend of userFriends) {
+        const sortedIds = [currentUser.username, friend.username].sort();
+        const privateRoomId = `private_${sortedIds[0]}_${sortedIds[1]}`;
+        
+        // Check if this private room exists
+        const existsResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/exists`);
+        const existsData = await existsResponse.json();
+        
+        if (existsData.exists) {
+          // Get room info
+          const infoResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/info`);
+          if (infoResponse.ok) {
+            const roomInfo = await infoResponse.json();
+            privateRooms.push(roomInfo);
+          }
+        }
+      }
+      
+      // Add private rooms to customRooms if not already present
+      if (privateRooms.length > 0) {
+        setCustomRooms(prev => {
+          const existingRoomIds = prev.map(room => room.id);
+          const newRooms = privateRooms.filter(room => !existingRoomIds.includes(room.id));
+          return [...prev, ...newRooms];
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load private chat rooms:", error);
+    }
+  };
 
   // Save custom rooms to localStorage whenever customRooms changes
   useEffect(() => {
@@ -201,6 +333,13 @@ const Chat = () => {
   const handleRoomSelect = (roomId) => {
     setSelectedRoomId(roomId);
     joinRoom(roomId);
+    
+    // Reset unread count for selected room
+    setCustomRooms(prev => prev.map(room => 
+      room.id === roomId 
+        ? { ...room, unreadCount: 0 }
+        : room
+    ));
 
     const loadRoomHistory = async () => {
       const response = await fetch(
@@ -208,6 +347,23 @@ const Chat = () => {
       );
       const data = await response.json();
       setMessages(data);
+      
+      // Update room's last message from history
+      if (data.length > 0) {
+        const lastMessage = data[data.length - 1];
+        if (!lastMessage.isSystemMessage) {
+          setCustomRooms(prev => prev.map(room => 
+            room.id === roomId 
+              ? { 
+                  ...room, 
+                  lastMessage: lastMessage.message,
+                  lastMessageTime: lastMessage.clientTimestamp,
+                  lastMessageSender: lastMessage.sender?.name || lastMessage.sender?.username || 'Unknown'
+                }
+              : room
+          ));
+        }
+      }
     };
 
     loadRoomHistory();
@@ -485,81 +641,94 @@ const Chat = () => {
 
   };
 
-  // Handle room creation
-  const handleCreateRoom = async (roomData) => {
-    try {
-      const response = await fetch("http://localhost:3000/api/room/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(roomData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create room");
-      }
-
-      const newRoom = await response.json();
-      
-      // Add to custom rooms list
-      setCustomRooms(prev => [...prev, newRoom]);
-      
-      // Automatically join the new room
-      setSelectedRoomId(newRoom.id);
-      joinRoom(newRoom.id);
-      
-      return newRoom;
-    } catch (error) {
-      console.error("❌ Failed to create room:", error);
-      throw error;
-    }
-  };
-
-  // Handle joining room by ID
-  const handleJoinRoom = async (roomId) => {
-    try {
-      // First check if room exists
-      const existsResponse = await fetch(`http://localhost:3000/api/room/${roomId}/exists`);
-      const existsData = await existsResponse.json();
-      
-      if (!existsData.exists) {
-        throw new Error("Room does not exist");
-      }
-
-      // Get room info
-      const infoResponse = await fetch(`http://localhost:3000/api/room/${roomId}/info`);
-      if (!infoResponse.ok) {
-        throw new Error("Unable to get room information");
-      }
-      
-      const roomInfo = await infoResponse.json();
-      
-      // Add to custom rooms if not already present
-      setCustomRooms(prev => {
-        const exists = prev.some(room => room.id === roomId);
-        if (exists) {
-          return prev;
-        }
-        return [...prev, roomInfo];
-      });
-      
-      // Join the room
-      setSelectedRoomId(roomId);
-      joinRoom(roomId);
-      
-      return roomInfo;
-    } catch (error) {
-      console.error("❌ Failed to join room:", error);
-      throw error;
-    }
-  };
 
   // Friends related handlers
-  const handleStartChat = (friend) => {
-    // TODO: Implement private chat functionality
-    alert(`Start chat with ${friend.name} feature not yet implemented`);
+  const handleStartChat = async (friend) => {
+    
+    try {
+      // Create a private room ID using sorted usernames to ensure consistency
+      const sortedIds = [currentUser.username, friend.username].sort();
+      const privateRoomId = `private_${sortedIds[0]}_${sortedIds[1]}`;
+      
+      // Create room data for private chat
+      const roomData = {
+        id: privateRoomId,
+        name: `${friend.name}`,
+        description: `Private chat with ${friend.name}`,
+        type: 'private',
+        participants: [currentUser.id, friend.id]
+      };
+
+      // Try to create the room (if it doesn't exist) or join existing one
+      try {
+        // First check if room exists
+        const existsResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/exists`);
+        const existsData = await existsResponse.json();
+        
+        if (!existsData.exists) {
+          // Create new private room
+          const response = await fetch("http://localhost:3000/api/room/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(roomData),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to create room");
+          }
+
+          const newRoom = await response.json();
+          
+          // Add to custom rooms list
+          setCustomRooms(prev => [...prev, newRoom]);
+          
+          // Automatically select the new room
+          setSelectedRoomId(newRoom.id);
+          joinRoom(newRoom.id);
+          
+          // Notify the friend about the new private chat room
+          sendMessage({
+            type: MESSAGE_TYPES.PRIVATE_CHAT_CREATED,
+            roomInfo: roomData,
+            targetUserId: friend.username
+          });
+        } else {
+          // Room exists, get room info and join it
+          const infoResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/info`);
+          if (infoResponse.ok) {
+            const roomInfo = await infoResponse.json();
+            
+            // Add to custom rooms if not already present
+            setCustomRooms(prev => {
+              const exists = prev.some(room => room.id === privateRoomId);
+              if (exists) {
+                return prev;
+              }
+              return [...prev, roomInfo];
+            });
+          }
+          
+          // Join the room
+          setSelectedRoomId(privateRoomId);
+          joinRoom(privateRoomId);
+        }
+      } catch (error) {
+        console.error('Error in room creation/join:', error);
+        // If creation fails, try to join existing room anyway
+        setSelectedRoomId(privateRoomId);
+        joinRoom(privateRoomId);
+      }
+      
+      // Switch to rooms section to show the private chat
+      setActiveSection('rooms');
+      
+    } catch (error) {
+      console.error('Failed to start chat with friend:', error);
+      alert(`Failed to start chat with ${friend.name}. Please try again.`);
+    }
   };
 
   const handleRemoveFriend = (friend) => {
@@ -571,7 +740,7 @@ const Chat = () => {
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_ACCEPTED,
       invitationId: invitation.id,
-      fromUserId: invitation.from.id,
+      fromUserId: invitation.fromUserId,
     });
     
     // Remove from received invitations in localStorage
@@ -586,7 +755,7 @@ const Chat = () => {
     sendMessage({
       type: MESSAGE_TYPES.FRIEND_INVITATION_DECLINED,
       invitationId: invitation.id,
-      fromUserId: invitation.from.id,
+      fromUserId: invitation.fromUserId,
     });
     
     // Remove from received invitations in localStorage
@@ -713,33 +882,32 @@ const Chat = () => {
     setSentInvitations([]);
   };
 
-  // Tab change handler
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
+  // Section change handler
+  const handleSectionChange = (sectionId) => {
+    setActiveSection(sectionId);
   };
 
-  const DEFAULT_ROOMS = [
-    { id: "sport", name: "Sports Room", description: "Discuss sports topics" },
-    {
-      id: "finance",
-      name: "Finance Room",
-      description: "Share investment insights",
-    },
-    {
-      id: "tech",
-      name: "Tech Room",
-      description: "Explore latest tech trends",
-    },
-  ];
+  // Calculate unread counts for navigation
+  const getUnreadCounts = () => {
+    const roomsUnreadCount = customRooms.reduce((total, room) => total + (room.unreadCount || 0), 0);
+    const invitationsUnreadCount = receivedInvitations.length;
+    const totalUnreadCount = roomsUnreadCount + invitationsUnreadCount;
+    
+    return {
+      rooms: roomsUnreadCount,
+      invitations: invitationsUnreadCount,
+      friends: 0, // No unread count for friends tab
+      total: totalUnreadCount
+    };
+  };
 
   const selectedRoom = 
-    DEFAULT_ROOMS.find((room) => room.id === selectedRoomId) ||
     customRooms.find((room) => room.id === selectedRoomId) ||
     { id: selectedRoomId, name: selectedRoomId, description: "Unknown Room" };
 
-  // Render tab content based on active tab
-  const renderTabContent = () => {
-    switch (activeTab) {
+  // Render section content based on active section
+  const renderSectionContent = () => {
+    switch (activeSection) {
       case "friends":
         return (
           <FriendsTab
@@ -753,10 +921,7 @@ const Chat = () => {
           <RoomsTab
             onRoomSelect={handleRoomSelect}
             currentRoomId={selectedRoomId}
-            defaultRooms={DEFAULT_ROOMS}
             customRooms={customRooms}
-            onCreateRoom={handleCreateRoom}
-            onJoinRoom={handleJoinRoom}
           />
         );
       case "invitations":
@@ -779,35 +944,63 @@ const Chat = () => {
 
   return (
     <div className="chat">
-      <div className="chat__sidebar">
-        <TabNavigation
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-        <div className="chat__tab-content">
-          {renderTabContent()}
+      {/* Left Vertical Navigation */}
+      <VerticalNavigation
+        currentUser={currentUser}
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        unreadCounts={getUnreadCounts()}
+      />
+      
+      {/* Middle Panel - Content Lists */}
+      <div className="chat__middle-panel">
+        <div className="chat__panel-header">
+          <h2 className="chat__panel-title">
+            {activeSection === 'friends' && '好友'}
+            {activeSection === 'rooms' && '聊天'}
+            {activeSection === 'invitations' && '邀請'}
+          </h2>
+        </div>
+        <div className="chat__panel-content">
+          {renderSectionContent()}
         </div>
       </div>
-      <div className="chat__main">
+      
+      {/* Right Panel - Chat Area */}
+      <div className="chat__right-panel">
         <RoomHeader className="chat__header" selectedRoom={selectedRoom} />
         <div className="chat__content">
-          <div className="chat__messages">
-            <MessagesList
-              messages={messages}
-              currentUser={currentUser}
-              selectedRoom={selectedRoom}
-              onSendMessage={handleSendMessage}
-              typingUsers={typingUsers}
-              onTypingStart={handleTypingStart}
-              onTypingStop={handleTypingStop}
-            />
-          </div>
-          <div className="chat__members">
-            <MembersList
-              roomUsers={roomUsers}
-              currentUserId={currentUser?.id}
-            />
-          </div>
+          {selectedRoomId ? (
+            <>
+              <div className="chat__messages">
+                <MessagesList
+                  messages={messages}
+                  currentUser={currentUser}
+                  selectedRoom={selectedRoom}
+                  onSendMessage={handleSendMessage}
+                  typingUsers={typingUsers}
+                  onTypingStart={handleTypingStart}
+                  onTypingStop={handleTypingStop}
+                />
+              </div>
+              <div className="chat__members">
+                <MembersList
+                  roomUsers={roomUsers}
+                  currentUserId={currentUser?.id}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="chat__welcome">
+              <div className="chat__welcome-content">
+                <div className="chat__welcome-icon">💬</div>
+                <h2 className="chat__welcome-title">歡迎使用聊天室</h2>
+                <p className="chat__welcome-text">
+                  選擇一個聊天室開始對話，或與朋友開始私人聊天
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       

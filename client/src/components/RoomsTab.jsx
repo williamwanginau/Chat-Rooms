@@ -1,125 +1,107 @@
-import { useState } from "react";
 import PropTypes from "prop-types";
-import RoomActions from "./RoomActions";
-import CopySuccessToast from "./CopySuccessToast";
 import "./RoomsTab.scss";
 
-const RoomsTab = ({ onRoomSelect, currentRoomId, defaultRooms, onCreateRoom, onJoinRoom, customRooms = [] }) => {
-  const [copiedId, setCopiedId] = useState(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+const RoomsTab = ({ onRoomSelect, currentRoomId, customRooms = [] }) => {
 
-  const handleCopyRoomId = async (e, roomId) => {
-    e.stopPropagation(); // Prevent room selection when clicking ID
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
     
-    try {
-      await navigator.clipboard.writeText(roomId);
-      setCopiedId(roomId);
-      setToastMessage(`Room ID ${roomId} copied to clipboard`);
-      setShowToast(true);
-      
-      // Reset copied state after 2 seconds
-      setTimeout(() => {
-        setCopiedId(null);
-      }, 2000);
-    } catch (error) {
-      console.error("Failed to copy room ID:", error);
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = roomId;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand("copy");
-        setCopiedId(roomId);
-        setToastMessage(`Room ID ${roomId} copied to clipboard`);
-        setShowToast(true);
-        setTimeout(() => {
-          setCopiedId(null);
-        }, 2000);
-      } catch (fallbackError) {
-        console.error("Fallback copy failed:", fallbackError);
-        alert(`Room ID: ${roomId}`);
-      }
-      document.body.removeChild(textArea);
-    }
+    const messageDate = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - messageDate;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'now';
+    if (diffMins < 60) return `${diffMins}分鐘前`;
+    if (diffHours < 24) return `${diffHours}小時前`;
+    if (diffDays < 7) return `${diffDays}天前`;
+    
+    return messageDate.toLocaleDateString('zh-TW');
   };
+
+  const getRoomAvatar = (room) => {
+    if (room.type === 'private') {
+      // For private chats, use a person icon
+      return 'person';
+    }
+    // For group chats, use a group icon
+    return 'group';
+  };
+
+  const getRoomDisplayName = (room) => {
+    if (room.type === 'private' && room.name) {
+      // For private chats, remove "Private chat with" prefix if it exists
+      return room.name.replace('Private chat with ', '');
+    }
+    return room.name || 'Unknown Room';
+  };
+
 
   return (
     <div className="rooms-tab">
       <div className="rooms-tab__header">
         <h3 className="rooms-tab__title">Chat Rooms</h3>
-        <RoomActions onCreateRoom={onCreateRoom} onJoinRoom={onJoinRoom} />
       </div>
 
       <div className="rooms-tab__body">
-        {/* Default Rooms Section */}
-        {defaultRooms.length > 0 && (
-          <div className="rooms-tab__section">
-            <h4 className="rooms-tab__section-title">Default Rooms</h4>
-            {defaultRooms.map((room) => (
+        {/* Chat List */}
+        {customRooms.length > 0 && (
+          <div className="rooms-tab__chat-list">
+            {customRooms.map((room) => (
               <div
-                className={`rooms-tab__item ${
-                  currentRoomId === room.id ? "rooms-tab__item--active" : ""
+                className={`chat-item ${
+                  currentRoomId === room.id ? "chat-item--active" : ""
                 }`}
                 key={room.id}
                 onClick={() => onRoomSelect(room.id)}
               >
-                <h3 className="rooms-tab__item-name">{room.name}</h3>
-                <p className="rooms-tab__item-description">
-                  {room.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Custom Rooms Section */}
-        {customRooms.length > 0 && (
-          <div className="rooms-tab__section">
-            <h4 className="rooms-tab__section-title">My Rooms</h4>
-            {customRooms.map((room) => (
-              <div
-                className={`rooms-tab__item ${
-                  currentRoomId === room.id ? "rooms-tab__item--active" : ""
-                } ${room.isCustom ? "rooms-tab__item--custom" : ""}`}
-                key={room.id}
-                onClick={() => onRoomSelect(room.id)}
-              >
-                <div className="rooms-tab__item-header">
-                  <h3 className="rooms-tab__item-name">{room.name}</h3>
-                  <span 
-                    className={`rooms-tab__item-id ${copiedId === room.id ? 'rooms-tab__item-id--copied' : ''}`}
-                    onClick={(e) => handleCopyRoomId(e, room.id)}
-                    title="Click to copy room ID"
-                  >
-                    {room.id}
-                  </span>
+                <div className="chat-item__avatar">
+                  <span className="chat-item__avatar-icon material-icons">{getRoomAvatar(room)}</span>
                 </div>
-                <p className="rooms-tab__item-description">
-                  {room.description}
-                </p>
+                
+                <div className="chat-item__content">
+                  <div className="chat-item__header">
+                    <h3 className="chat-item__name">{getRoomDisplayName(room)}</h3>
+                    <span className="chat-item__time">
+                      {room.lastMessageTime ? formatMessageTime(room.lastMessageTime) : ''}
+                    </span>
+                  </div>
+                  
+                  <div className="chat-item__message">
+                    {room.lastMessage ? (
+                      <p className="chat-item__last-message">
+                        <span className="chat-item__sender">{room.lastMessageSender}: </span>
+                        <span className="chat-item__text">{room.lastMessage}</span>
+                      </p>
+                    ) : (
+                      <p className="chat-item__description">{room.description || '開始對話'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Unread badge */}
+                <div className="chat-item__badge">
+                  {room.unreadCount > 0 && (
+                    <span>{room.unreadCount > 99 ? '99+' : room.unreadCount}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
 
         {/* Empty state */}
-        {defaultRooms.length === 0 && customRooms.length === 0 && (
+        {customRooms.length === 0 && (
           <div className="rooms-tab__empty">
             <span className="rooms-tab__empty-icon">💬</span>
-            <p className="rooms-tab__empty-text">No chat rooms yet</p>
-            <p className="rooms-tab__empty-hint">Click the buttons above to create or join a room</p>
+            <p className="rooms-tab__empty-text">還沒有聊天室</p>
+            <p className="rooms-tab__empty-hint">與朋友開始聊天來建立私人聊天室</p>
           </div>
         )}
       </div>
 
-      {/* Toast notification */}
-      <CopySuccessToast
-        isVisible={showToast}
-        message={toastMessage}
-        onHide={() => setShowToast(false)}
-      />
     </div>
   );
 };
@@ -127,9 +109,6 @@ const RoomsTab = ({ onRoomSelect, currentRoomId, defaultRooms, onCreateRoom, onJ
 RoomsTab.propTypes = {
   onRoomSelect: PropTypes.func.isRequired,
   currentRoomId: PropTypes.string,
-  defaultRooms: PropTypes.array.isRequired,
-  onCreateRoom: PropTypes.func.isRequired,
-  onJoinRoom: PropTypes.func.isRequired,
   customRooms: PropTypes.array,
 };
 

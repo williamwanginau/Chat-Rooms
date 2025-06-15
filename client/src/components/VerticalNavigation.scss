@@ -1,0 +1,179 @@
+.vertical-nav {
+  width: 80px;
+  height: 100vh;
+  background-color: #1c1c1e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  position: relative;
+  z-index: 100;
+
+  &__profile {
+    margin-bottom: 8px;
+    position: relative;
+
+    &-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-color: #007AFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      
+      &:hover {
+        background-color: #0056CC;
+      }
+    }
+
+    &-image {
+      font-size: 20px;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    &-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background-color: #ff4757;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #1c1c1e;
+    }
+
+    &-menu {
+      position: absolute;
+      left: 80px;
+      top: 0;
+      background-color: #2c2c2e;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-width: 200px;
+      z-index: 1000;
+
+      &-info {
+        h4 {
+          color: #ffffff;
+          margin: 0 0 4px 0;
+          font-size: 14px;
+        }
+
+        p {
+          color: #a0a0a2;
+          margin: 0;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+
+  &__item {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    color: #8e8e93;
+    margin: 4px 0;
+
+    &:hover:not(&--disabled) {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    &--active {
+      background-color: #007AFF;
+      color: #ffffff;
+
+      &:hover {
+        background-color: #0056CC;
+      }
+    }
+
+    &--disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    &-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background-color: #ff3b30;
+      color: white;
+      border-radius: 10px;
+      padding: 2px 5px;
+      font-size: 9px;
+      font-weight: 600;
+      min-width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #1c1c1e;
+    }
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .vertical-nav {
+    width: 50px;
+    padding: 6px 0;
+
+    &__profile-avatar {
+      width: 36px;
+      height: 36px;
+
+      &-image {
+        font-size: 16px;
+      }
+    }
+
+    &__item {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+
+      &-icon {
+        font-size: 18px;
+      }
+    }
+  }
+}
