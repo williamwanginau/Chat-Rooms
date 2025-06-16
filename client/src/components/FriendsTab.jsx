@@ -12,22 +12,6 @@ const FriendsTab = ({ friends = [], onStartChat, onRemoveFriend }) => {
     (friend.username || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatusText = (status, lastSeen) => {
-    if (status === "online") return "線上";
-    if (status === "away") return "離開";
-    
-    const lastSeenDate = new Date(lastSeen);
-    const now = new Date();
-    const diffMinutes = Math.floor((now - lastSeenDate) / (1000 * 60));
-    
-    if (diffMinutes < 60) {
-      return `${diffMinutes}分鐘前`;
-    } else if (diffMinutes < 1440) {
-      return `${Math.floor(diffMinutes / 60)}小時前`;
-    } else {
-      return `${Math.floor(diffMinutes / 1440)}天前`;
-    }
-  };
 
   return (
     <div className="friends-tab">
@@ -72,15 +56,12 @@ const FriendsTab = ({ friends = [], onStartChat, onRemoveFriend }) => {
                           <span className="material-icons">person</span>
                         )}
                     </div>
-                    {friend.status === 'online' && (
-                      <div className="friends-tab__status friends-tab__status--online"></div>
-                    )}
                   </div>
                   
                   <div className="friends-tab__item-info">
                     <h4 className="friends-tab__item-name">{friend.name || friend.username || 'Unknown'}</h4>
                     <p className="friends-tab__item-status">
-                      {getStatusText(friend.status, friend.lastSeen)}
+                      Click to start chat
                     </p>
                   </div>
 

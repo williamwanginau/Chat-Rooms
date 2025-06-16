@@ -474,14 +474,6 @@ const InvitationsTab = ({
                               <span className="invitations-tab__search-email">{user.email}</span>
                             )}
                           </div>
-                          <div className="invitations-tab__search-status">
-                            <span className={`invitations-tab__status-indicator ${
-                              user.online ? 'invitations-tab__status-indicator--online' : 'invitations-tab__status-indicator--offline'
-                            }`}></span>
-                            <span className="invitations-tab__status-text">
-                              {user.online ? 'Online' : 'Offline'}
-                            </span>
-                          </div>
                         </div>
                         <button
                           className="invitations-tab__invite-btn"

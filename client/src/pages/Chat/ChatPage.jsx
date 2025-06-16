@@ -3,9 +3,7 @@ import MembersList from "./MembersList";
 import RoomHeader from "./RoomHeader";
 import DevFunctions from "../../components/DevFunctions";
 import VerticalNavigation from "../../components/VerticalNavigation";
-import FriendsTab from "../../components/FriendsTab";
-import RoomsTab from "../../components/RoomsTab";
-import InvitationsTab from "../../components/InvitationsTab";
+import ContactList from "../../components/ContactList";
 import "./ChatPage.scss";
 import { useState, useEffect } from "react";
 import useWebSocket from "../../hooks/useWebSocket";
@@ -22,25 +20,36 @@ const Chat = () => {
   const [sentInvitations, setSentInvitations] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
-  const { messages, setMessages, roomUsers, typingUsers, sendMessage, joinRoom } =
-    useWebSocket(currentUser, selectedRoomId);
+  const {
+    messages,
+    setMessages,
+    roomUsers,
+    typingUsers,
+    sendMessage,
+    joinRoom,
+  } = useWebSocket(currentUser, selectedRoomId);
 
   // Update room's last message when messages change
   useEffect(() => {
     if (messages.length > 0 && selectedRoomId) {
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage.isSystemMessage) {
-        setCustomRooms(prev => prev.map(room => 
-          room.id === selectedRoomId 
-            ? { 
-                ...room, 
-                lastMessage: lastMessage.message,
-                lastMessageTime: lastMessage.clientTimestamp,
-                lastMessageSender: lastMessage.sender?.name || lastMessage.sender?.username || 'Unknown',
-                unreadCount: 0 // Reset unread count for current room
-              }
-            : room
-        ));
+        setCustomRooms((prev) =>
+          prev.map((room) =>
+            room.id === selectedRoomId
+              ? {
+                  ...room,
+                  lastMessage: lastMessage.message,
+                  lastMessageTime: lastMessage.clientTimestamp,
+                  lastMessageSender:
+                    lastMessage.sender?.name ||
+                    lastMessage.sender?.username ||
+                    "Unknown",
+                  unreadCount: 0, // Reset unread count for current room
+                }
+              : room
+          )
+        );
       }
     }
   }, [messages, selectedRoomId]);
@@ -49,32 +58,36 @@ const Chat = () => {
   useEffect(() => {
     const handleNewMessage = (event) => {
       const { roomId, message, timestamp, sender } = event.detail;
-      
+
       // Only update unread count if the message is not from the currently selected room
       if (roomId !== selectedRoomId) {
-        setCustomRooms(prev => prev.map(room => 
-          room.id === roomId 
-            ? { 
-                ...room, 
-                lastMessage: message,
-                lastMessageTime: timestamp,
-                lastMessageSender: sender,
-                unreadCount: (room.unreadCount || 0) + 1
-              }
-            : room
-        ));
+        setCustomRooms((prev) =>
+          prev.map((room) =>
+            room.id === roomId
+              ? {
+                  ...room,
+                  lastMessage: message,
+                  lastMessageTime: timestamp,
+                  lastMessageSender: sender,
+                  unreadCount: (room.unreadCount || 0) + 1,
+                }
+              : room
+          )
+        );
       }
     };
 
-    window.addEventListener('newMessage', handleNewMessage);
-    return () => window.removeEventListener('newMessage', handleNewMessage);
+    window.addEventListener("newMessage", handleNewMessage);
+    return () => window.removeEventListener("newMessage", handleNewMessage);
   }, [selectedRoomId]);
 
   // Load invitations from localStorage on component mount
   useEffect(() => {
-    const savedReceivedInvitations = localStorage.getItem("receivedInvitations");
+    const savedReceivedInvitations = localStorage.getItem(
+      "receivedInvitations"
+    );
     const savedSentInvitations = localStorage.getItem("sentInvitations");
-    
+
     if (savedReceivedInvitations) {
       try {
         const parsedReceivedInvitations = JSON.parse(savedReceivedInvitations);
@@ -83,7 +96,7 @@ const Chat = () => {
         console.error("Failed to parse saved received invitations:", error);
       }
     }
-    
+
     if (savedSentInvitations) {
       try {
         const parsedSentInvitations = JSON.parse(savedSentInvitations);
@@ -96,14 +109,14 @@ const Chat = () => {
     // Load friends from user object instead of separate localStorage key
     if (currentUser) {
       const userFriends = getUserFriendsInfo(currentUser.id);
-      setFriends(userFriends.map(friend => ({
-        id: friend.id,
-        name: friend.name || friend.username || 'Unknown User',
-        username: friend.username || 'unknown',
-        avatar: friend.avatar || "/default-avatar.png",
-        status: friend.online ? "online" : "offline",
-        statusTimestamp: friend.lastSeen || new Date().toISOString()
-      })));
+      setFriends(
+        userFriends.map((friend) => ({
+          id: friend.id,
+          name: friend.name || friend.username || "Unknown User",
+          username: friend.username || "unknown",
+          avatar: friend.avatar || "/default-avatar.png",
+        }))
+      );
     }
   }, []);
 
@@ -111,7 +124,7 @@ const Chat = () => {
   useEffect(() => {
     const handleFriendInvitationReceived = (event) => {
       const { invitation } = event.detail;
-      setReceivedInvitations(prev => {
+      setReceivedInvitations((prev) => {
         const updated = [...prev, invitation];
         localStorage.setItem("receivedInvitations", JSON.stringify(updated));
         return updated;
@@ -121,7 +134,7 @@ const Chat = () => {
     const handleFriendInvitationSent = (event) => {
       const { success, error, toUserId, invitation } = event.detail;
       if (success && invitation) {
-        setSentInvitations(prev => {
+        setSentInvitations((prev) => {
           const updated = [...prev, invitation];
           localStorage.setItem("sentInvitations", JSON.stringify(updated));
           return updated;
@@ -135,14 +148,14 @@ const Chat = () => {
     const handleFriendInvitationAccepted = (event) => {
       const { invitationId, acceptedBy } = event.detail;
       // Remove from received invitations
-      setReceivedInvitations(prev => {
-        const updated = prev.filter(inv => inv.id !== invitationId);
+      setReceivedInvitations((prev) => {
+        const updated = prev.filter((inv) => inv.id !== invitationId);
         localStorage.setItem("receivedInvitations", JSON.stringify(updated));
         return updated;
       });
       // Also remove from sent invitations (for the sender)
-      setSentInvitations(prev => {
-        const updated = prev.filter(inv => inv.id !== invitationId);
+      setSentInvitations((prev) => {
+        const updated = prev.filter((inv) => inv.id !== invitationId);
         localStorage.setItem("sentInvitations", JSON.stringify(updated));
         return updated;
       });
@@ -151,8 +164,8 @@ const Chat = () => {
     const handleFriendInvitationDeclined = (event) => {
       const { invitationId, declinedBy } = event.detail;
       // Remove from sent invitations
-      setSentInvitations(prev => {
-        const updated = prev.filter(inv => inv.id !== invitationId);
+      setSentInvitations((prev) => {
+        const updated = prev.filter((inv) => inv.id !== invitationId);
         localStorage.setItem("sentInvitations", JSON.stringify(updated));
         return updated;
       });
@@ -161,8 +174,8 @@ const Chat = () => {
     const handleFriendInvitationCancelled = (event) => {
       const { invitationId, cancelledBy } = event.detail;
       // Remove from received invitations
-      setReceivedInvitations(prev => {
-        const updated = prev.filter(inv => inv.id !== invitationId);
+      setReceivedInvitations((prev) => {
+        const updated = prev.filter((inv) => inv.id !== invitationId);
         localStorage.setItem("receivedInvitations", JSON.stringify(updated));
         return updated;
       });
@@ -171,55 +184,54 @@ const Chat = () => {
     const handleFriendAdded = (event) => {
       const { newFriend } = event.detail;
       // Add to friends list
-      setFriends(prev => {
+      setFriends((prev) => {
         // Friends are now managed by friendshipUtils, just update UI state
-        const updated = [...prev, {
-          id: newFriend.id,
-          name: newFriend.name || newFriend.username,
-          username: newFriend.username,
-          email: newFriend.email || `${newFriend.username}@example.com`,
-          avatar: newFriend.avatar || "/default-avatar.png",
-          status: "online",
-          statusTimestamp: new Date().toISOString()
-        }];
+        const updated = [
+          ...prev,
+          {
+            id: newFriend.id,
+            name: newFriend.name || newFriend.username,
+            username: newFriend.username,
+            email: newFriend.email || `${newFriend.username}@example.com`,
+            avatar: newFriend.avatar || "/default-avatar.png",
+          },
+        ];
         return updated;
       });
     };
 
     const handleFriendsListSync = (event) => {
       const { friendIds } = event.detail;
-      
+
       // Get full user info for each friend ID
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const syncedFriends = friendIds.map(friendId => {
-        const friendUser = users.find(user => user.id === friendId);
-        return friendUser ? {
-          id: friendUser.id,
-          name: friendUser.name,
-          username: friendUser.username,
-          email: friendUser.email,
-          avatar: friendUser.avatar || "/default-avatar.png",
-          status: friendUser.online ? "online" : "offline",
-          statusTimestamp: friendUser.lastSeen || new Date().toISOString()
-        } : {
-          id: friendId,
-          name: "Unknown User",
-          username: "unknown",
-          avatar: "/default-avatar.png",
-          status: "offline",
-          statusTimestamp: new Date().toISOString()
-        };
+      const syncedFriends = friendIds.map((friendId) => {
+        const friendUser = users.find((user) => user.id === friendId);
+        return friendUser
+          ? {
+              id: friendUser.id,
+              name: friendUser.name,
+              username: friendUser.username,
+              email: friendUser.email,
+              avatar: friendUser.avatar || "/default-avatar.png",
+            }
+          : {
+              id: friendId,
+              name: "Unknown User",
+              username: "unknown",
+              avatar: "/default-avatar.png",
+            };
       });
-      
+
       setFriends(syncedFriends);
     };
 
     const handlePrivateChatCreated = (event) => {
       const { roomInfo } = event.detail;
-      
+
       // Add the new private chat room to customRooms if not already present
-      setCustomRooms(prev => {
-        const exists = prev.some(room => room.id === roomInfo.id);
+      setCustomRooms((prev) => {
+        const exists = prev.some((room) => room.id === roomInfo.id);
         if (exists) {
           return prev;
         }
@@ -229,41 +241,73 @@ const Chat = () => {
 
     const handleNewMessage = (event) => {
       const { roomId, message, timestamp, sender } = event.detail;
-      
+
       // Update room's last message info
-      setCustomRooms(prev => prev.map(room => 
-        room.id === roomId 
-          ? { 
-              ...room, 
-              lastMessage: message,
-              lastMessageTime: timestamp,
-              lastMessageSender: sender
-            }
-          : room
-      ));
+      setCustomRooms((prev) =>
+        prev.map((room) =>
+          room.id === roomId
+            ? {
+                ...room,
+                lastMessage: message,
+                lastMessageTime: timestamp,
+                lastMessageSender: sender,
+              }
+            : room
+        )
+      );
     };
 
     // Add event listeners
-    window.addEventListener('friendInvitationReceived', handleFriendInvitationReceived);
-    window.addEventListener('friendInvitationSent', handleFriendInvitationSent);
-    window.addEventListener('friendInvitationAccepted', handleFriendInvitationAccepted);
-    window.addEventListener('friendInvitationDeclined', handleFriendInvitationDeclined);
-    window.addEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
-    window.addEventListener('friendAdded', handleFriendAdded);
-    window.addEventListener('friendsListSync', handleFriendsListSync);
-    window.addEventListener('privateChatCreated', handlePrivateChatCreated);
-    window.addEventListener('newMessage', handleNewMessage);
+    window.addEventListener(
+      "friendInvitationReceived",
+      handleFriendInvitationReceived
+    );
+    window.addEventListener("friendInvitationSent", handleFriendInvitationSent);
+    window.addEventListener(
+      "friendInvitationAccepted",
+      handleFriendInvitationAccepted
+    );
+    window.addEventListener(
+      "friendInvitationDeclined",
+      handleFriendInvitationDeclined
+    );
+    window.addEventListener(
+      "friendInvitationCancelled",
+      handleFriendInvitationCancelled
+    );
+    window.addEventListener("friendAdded", handleFriendAdded);
+    window.addEventListener("friendsListSync", handleFriendsListSync);
+    window.addEventListener("privateChatCreated", handlePrivateChatCreated);
+    window.addEventListener("newMessage", handleNewMessage);
 
     // Cleanup event listeners
     return () => {
-      window.removeEventListener('friendInvitationReceived', handleFriendInvitationReceived);
-      window.removeEventListener('friendInvitationSent', handleFriendInvitationSent);
-      window.removeEventListener('friendInvitationAccepted', handleFriendInvitationAccepted);
-      window.removeEventListener('friendInvitationDeclined', handleFriendInvitationDeclined);
-      window.removeEventListener('friendInvitationCancelled', handleFriendInvitationCancelled);
-      window.removeEventListener('friendAdded', handleFriendAdded);
-      window.removeEventListener('friendsListSync', handleFriendsListSync);
-      window.removeEventListener('privateChatCreated', handlePrivateChatCreated);
+      window.removeEventListener(
+        "friendInvitationReceived",
+        handleFriendInvitationReceived
+      );
+      window.removeEventListener(
+        "friendInvitationSent",
+        handleFriendInvitationSent
+      );
+      window.removeEventListener(
+        "friendInvitationAccepted",
+        handleFriendInvitationAccepted
+      );
+      window.removeEventListener(
+        "friendInvitationDeclined",
+        handleFriendInvitationDeclined
+      );
+      window.removeEventListener(
+        "friendInvitationCancelled",
+        handleFriendInvitationCancelled
+      );
+      window.removeEventListener("friendAdded", handleFriendAdded);
+      window.removeEventListener("friendsListSync", handleFriendsListSync);
+      window.removeEventListener(
+        "privateChatCreated",
+        handlePrivateChatCreated
+      );
     };
   }, []);
 
@@ -278,7 +322,7 @@ const Chat = () => {
         console.error("Failed to parse saved custom rooms:", error);
       }
     }
-    
+
     // Load private chat rooms for current user
     loadPrivateChatRooms();
   }, []);
@@ -286,35 +330,41 @@ const Chat = () => {
   // Load private chat rooms that the current user is part of
   const loadPrivateChatRooms = async () => {
     if (!currentUser) return;
-    
+
     try {
       // Check for private rooms with friends
       const userFriends = getUserFriendsInfo(currentUser.id);
       const privateRooms = [];
-      
+
       for (const friend of userFriends) {
         const sortedIds = [currentUser.username, friend.username].sort();
         const privateRoomId = `private_${sortedIds[0]}_${sortedIds[1]}`;
-        
+
         // Check if this private room exists
-        const existsResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/exists`);
+        const existsResponse = await fetch(
+          `http://localhost:3000/api/room/${privateRoomId}/exists`
+        );
         const existsData = await existsResponse.json();
-        
+
         if (existsData.exists) {
           // Get room info
-          const infoResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/info`);
+          const infoResponse = await fetch(
+            `http://localhost:3000/api/room/${privateRoomId}/info`
+          );
           if (infoResponse.ok) {
             const roomInfo = await infoResponse.json();
             privateRooms.push(roomInfo);
           }
         }
       }
-      
+
       // Add private rooms to customRooms if not already present
       if (privateRooms.length > 0) {
-        setCustomRooms(prev => {
-          const existingRoomIds = prev.map(room => room.id);
-          const newRooms = privateRooms.filter(room => !existingRoomIds.includes(room.id));
+        setCustomRooms((prev) => {
+          const existingRoomIds = prev.map((room) => room.id);
+          const newRooms = privateRooms.filter(
+            (room) => !existingRoomIds.includes(room.id)
+          );
           return [...prev, ...newRooms];
         });
       }
@@ -333,13 +383,13 @@ const Chat = () => {
   const handleRoomSelect = (roomId) => {
     setSelectedRoomId(roomId);
     joinRoom(roomId);
-    
+
     // Reset unread count for selected room
-    setCustomRooms(prev => prev.map(room => 
-      room.id === roomId 
-        ? { ...room, unreadCount: 0 }
-        : room
-    ));
+    setCustomRooms((prev) =>
+      prev.map((room) =>
+        room.id === roomId ? { ...room, unreadCount: 0 } : room
+      )
+    );
 
     const loadRoomHistory = async () => {
       const response = await fetch(
@@ -347,21 +397,26 @@ const Chat = () => {
       );
       const data = await response.json();
       setMessages(data);
-      
+
       // Update room's last message from history
       if (data.length > 0) {
         const lastMessage = data[data.length - 1];
         if (!lastMessage.isSystemMessage) {
-          setCustomRooms(prev => prev.map(room => 
-            room.id === roomId 
-              ? { 
-                  ...room, 
-                  lastMessage: lastMessage.message,
-                  lastMessageTime: lastMessage.clientTimestamp,
-                  lastMessageSender: lastMessage.sender?.name || lastMessage.sender?.username || 'Unknown'
-                }
-              : room
-          ));
+          setCustomRooms((prev) =>
+            prev.map((room) =>
+              room.id === roomId
+                ? {
+                    ...room,
+                    lastMessage: lastMessage.message,
+                    lastMessageTime: lastMessage.clientTimestamp,
+                    lastMessageSender:
+                      lastMessage.sender?.name ||
+                      lastMessage.sender?.username ||
+                      "Unknown",
+                  }
+                : room
+            )
+          );
         }
       }
     };
@@ -393,52 +448,66 @@ const Chat = () => {
       },
       // Yesterday
       {
-        messageId: "test-2", 
+        messageId: "test-2",
         message: "Yesterday's message here",
         sender: { id: "user2", name: "Bob" },
-        clientTimestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // 3 days ago (this week)
       {
         messageId: "test-3",
         message: "Message from 3 days ago",
         sender: { id: "user1", name: "Alice" },
-        clientTimestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 3 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // 1 week ago
       {
         messageId: "test-4",
         message: "One week ago message",
         sender: { id: "user3", name: "Charlie" },
-        clientTimestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // 2 weeks ago
       {
         messageId: "test-5",
         message: "Two weeks ago message",
         sender: { id: "user2", name: "Bob" },
-        clientTimestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 14 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // 1 month ago
       {
         messageId: "test-6",
         message: "Message from last month",
         sender: { id: "user1", name: "Alice" },
-        clientTimestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 30 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // 3 months ago
       {
         messageId: "test-7",
         message: "Three months ago message",
         sender: { id: "user3", name: "Charlie" },
-        clientTimestamp: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 90 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
       // Last year
       {
         messageId: "test-8",
         message: "Message from last year!",
         sender: { id: "user2", name: "Bob" },
-        clientTimestamp: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+        clientTimestamp: new Date(
+          Date.now() - 365 * 24 * 60 * 60 * 1000
+        ).toISOString(),
       },
     ];
 
@@ -451,7 +520,7 @@ const Chat = () => {
         clientTimestamp: new Date(new Date().setHours(9, 0, 0)).toISOString(),
       },
       {
-        messageId: "test-today-2", 
+        messageId: "test-today-2",
         message: "Lunch time! 🍕",
         sender: { id: "user2", name: "Bob" },
         clientTimestamp: new Date(new Date().setHours(12, 30, 0)).toISOString(),
@@ -480,45 +549,51 @@ const Chat = () => {
     const longMessages = [
       {
         messageId: "long-1",
-        message: "This is a very long message to test how the chat interface handles lengthy text content. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 🚀",
+        message:
+          "This is a very long message to test how the chat interface handles lengthy text content. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 🚀",
         sender: { id: "user1", name: "Alice" },
         clientTimestamp: new Date().toISOString(),
       },
       {
-        messageId: "long-2", 
-        message: "Testing special characters: 你好世界 🌍 ñáéíóú àèìòù çñ ß µ ∑ ∆ π Ω ≈ ≠ ≤ ≥ ◊ ♠ ♣ ♥ ♦ → ↑ ↓ ← ↔ ↕",
+        messageId: "long-2",
+        message:
+          "Testing special characters: 你好世界 🌍 ñáéíóú àèìòù çñ ß µ ∑ ∆ π Ω ≈ ≠ ≤ ≥ ◊ ♠ ♣ ♥ ♦ → ↑ ↓ ← ↔ ↕",
         sender: { id: "user2", name: "Bob" },
         clientTimestamp: new Date(Date.now() + 1000).toISOString(),
       },
       {
         messageId: "long-3",
-        message: "Code snippet test:\n```javascript\nfunction fibonacci(n) {\n  if (n <= 1) return n;\n  return fibonacci(n-1) + fibonacci(n-2);\n}\nconsole.log(fibonacci(10));\n```",
+        message:
+          "Code snippet test:\n```javascript\nfunction fibonacci(n) {\n  if (n <= 1) return n;\n  return fibonacci(n-1) + fibonacci(n-2);\n}\nconsole.log(fibonacci(10));\n```",
         sender: { id: "user3", name: "Charlie" },
         clientTimestamp: new Date(Date.now() + 2000).toISOString(),
       },
       {
         messageId: "long-4",
-        message: "URL test: https://www.example.com/very/long/path/to/some/resource?param1=value1&param2=value2&param3=value3#section",
+        message:
+          "URL test: https://www.example.com/very/long/path/to/some/resource?param1=value1&param2=value2&param3=value3#section",
         sender: { id: "user1", name: "Alice" },
         clientTimestamp: new Date(Date.now() + 3000).toISOString(),
-      }
+      },
     ];
-    
-    setMessages(prev => [...prev, ...longMessages]);
+
+    setMessages((prev) => [...prev, ...longMessages]);
   };
 
   const generateStressTest = () => {
     const stressMessages = Array.from({ length: 100 }, (_, i) => ({
       messageId: `stress-${i}`,
-      message: `Stress test message #${i + 1} - Testing performance with many messages`,
-      sender: { 
-        id: `user${(i % 3) + 1}`, 
-        name: ['Alice', 'Bob', 'Charlie'][i % 3] 
+      message: `Stress test message #${
+        i + 1
+      } - Testing performance with many messages`,
+      sender: {
+        id: `user${(i % 3) + 1}`,
+        name: ["Alice", "Bob", "Charlie"][i % 3],
       },
       clientTimestamp: new Date(Date.now() + i * 100).toISOString(),
     }));
-    
-    setMessages(prev => [...prev, ...stressMessages]);
+
+    setMessages((prev) => [...prev, ...stressMessages]);
   };
 
   const simulateTyping = () => {
@@ -538,7 +613,7 @@ const Chat = () => {
         type: MESSAGE_TYPES.TYPING_START,
         user: { name: "Charlie" },
         room: { id: selectedRoomId },
-      }
+      },
     ];
 
     // Send typing start events
@@ -550,21 +625,20 @@ const Chat = () => {
 
     // Stop typing after 5 seconds
     setTimeout(() => {
-      typingEvents.forEach(event => {
+      typingEvents.forEach((event) => {
         sendMessage({
           ...event,
           type: MESSAGE_TYPES.TYPING_STOP,
         });
       });
     }, 5000);
-
   };
 
   const simulateUserJoinLeave = () => {
     const users = [
       { id: "temp1", name: "David" },
       { id: "temp2", name: "Emma" },
-      { id: "temp3", name: "Frank" }
+      { id: "temp3", name: "Frank" },
     ];
 
     users.forEach((user, index) => {
@@ -584,9 +658,8 @@ const Chat = () => {
           user,
           room: { id: selectedRoomId },
         });
-      }, (index * 1000) + 3000);
+      }, index * 1000 + 3000);
     });
-
   };
 
   const simulateGradualUserJoin = () => {
@@ -598,13 +671,13 @@ const Chat = () => {
       { id: "virtual5", name: "Tom", username: "Tom" },
       { id: "virtual6", name: "Kate", username: "Kate" },
       { id: "virtual7", name: "John", username: "John" },
-      { id: "virtual8", name: "Amy", username: "Amy" }
+      { id: "virtual8", name: "Amy", username: "Amy" },
     ];
 
     // Gradually add virtual users with random intervals between 1-3 seconds
     virtualUsers.forEach((user, index) => {
       const randomDelay = Math.random() * 2000 + 1000; // Random delay between 1-3 seconds
-      
+
       setTimeout(() => {
         sendMessage({
           type: MESSAGE_TYPES.USER_JOINED,
@@ -613,7 +686,6 @@ const Chat = () => {
         });
       }, index * randomDelay);
     });
-
   };
 
   const removeAllVirtualUsers = () => {
@@ -625,7 +697,7 @@ const Chat = () => {
       { id: "virtual5", name: "Tom", username: "Tom" },
       { id: "virtual6", name: "Kate", username: "Kate" },
       { id: "virtual7", name: "John", username: "John" },
-      { id: "virtual8", name: "Amy", username: "Amy" }
+      { id: "virtual8", name: "Amy", username: "Amy" },
     ];
 
     // Remove all virtual users with short intervals
@@ -638,42 +710,44 @@ const Chat = () => {
         });
       }, index * 200); // 200ms interval for quick removal
     });
-
   };
-
 
   // Friends related handlers
   const handleStartChat = async (friend) => {
-    
     try {
       // Create a private room ID using sorted usernames to ensure consistency
       const sortedIds = [currentUser.username, friend.username].sort();
       const privateRoomId = `private_${sortedIds[0]}_${sortedIds[1]}`;
-      
+
       // Create room data for private chat
       const roomData = {
         id: privateRoomId,
         name: `${friend.name}`,
         description: `Private chat with ${friend.name}`,
-        type: 'private',
-        participants: [currentUser.id, friend.id]
+        type: "private",
+        participants: [currentUser.id, friend.id],
       };
 
       // Try to create the room (if it doesn't exist) or join existing one
       try {
         // First check if room exists
-        const existsResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/exists`);
+        const existsResponse = await fetch(
+          `http://localhost:3000/api/room/${privateRoomId}/exists`
+        );
         const existsData = await existsResponse.json();
-        
+
         if (!existsData.exists) {
           // Create new private room
-          const response = await fetch("http://localhost:3000/api/room/create", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(roomData),
-          });
+          const response = await fetch(
+            "http://localhost:3000/api/room/create",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(roomData),
+            }
+          );
 
           if (!response.ok) {
             const error = await response.json();
@@ -681,52 +755,53 @@ const Chat = () => {
           }
 
           const newRoom = await response.json();
-          
+
           // Add to custom rooms list
-          setCustomRooms(prev => [...prev, newRoom]);
-          
+          setCustomRooms((prev) => [...prev, newRoom]);
+
           // Automatically select the new room
           setSelectedRoomId(newRoom.id);
           joinRoom(newRoom.id);
-          
+
           // Notify the friend about the new private chat room
           sendMessage({
             type: MESSAGE_TYPES.PRIVATE_CHAT_CREATED,
             roomInfo: roomData,
-            targetUserId: friend.username
+            targetUserId: friend.username,
           });
         } else {
           // Room exists, get room info and join it
-          const infoResponse = await fetch(`http://localhost:3000/api/room/${privateRoomId}/info`);
+          const infoResponse = await fetch(
+            `http://localhost:3000/api/room/${privateRoomId}/info`
+          );
           if (infoResponse.ok) {
             const roomInfo = await infoResponse.json();
-            
+
             // Add to custom rooms if not already present
-            setCustomRooms(prev => {
-              const exists = prev.some(room => room.id === privateRoomId);
+            setCustomRooms((prev) => {
+              const exists = prev.some((room) => room.id === privateRoomId);
               if (exists) {
                 return prev;
               }
               return [...prev, roomInfo];
             });
           }
-          
+
           // Join the room
           setSelectedRoomId(privateRoomId);
           joinRoom(privateRoomId);
         }
       } catch (error) {
-        console.error('Error in room creation/join:', error);
+        console.error("Error in room creation/join:", error);
         // If creation fails, try to join existing room anyway
         setSelectedRoomId(privateRoomId);
         joinRoom(privateRoomId);
       }
-      
+
       // Switch to rooms section to show the private chat
-      setActiveSection('rooms');
-      
+      setActiveSection("rooms");
     } catch (error) {
-      console.error('Failed to start chat with friend:', error);
+      console.error("Failed to start chat with friend:", error);
       alert(`Failed to start chat with ${friend.name}. Please try again.`);
     }
   };
@@ -742,10 +817,10 @@ const Chat = () => {
       invitationId: invitation.id,
       fromUserId: invitation.fromUserId,
     });
-    
+
     // Remove from received invitations in localStorage
-    setReceivedInvitations(prev => {
-      const updated = prev.filter(inv => inv.id !== invitation.id);
+    setReceivedInvitations((prev) => {
+      const updated = prev.filter((inv) => inv.id !== invitation.id);
       localStorage.setItem("receivedInvitations", JSON.stringify(updated));
       return updated;
     });
@@ -757,10 +832,10 @@ const Chat = () => {
       invitationId: invitation.id,
       fromUserId: invitation.fromUserId,
     });
-    
+
     // Remove from received invitations in localStorage
-    setReceivedInvitations(prev => {
-      const updated = prev.filter(inv => inv.id !== invitation.id);
+    setReceivedInvitations((prev) => {
+      const updated = prev.filter((inv) => inv.id !== invitation.id);
       localStorage.setItem("receivedInvitations", JSON.stringify(updated));
       return updated;
     });
@@ -772,10 +847,10 @@ const Chat = () => {
       invitationId: invitation.id,
       toUserId: invitation.toUserId,
     });
-    
+
     // Remove from sent invitations in localStorage
-    setSentInvitations(prev => {
-      const updated = prev.filter(inv => inv.id !== invitation.id);
+    setSentInvitations((prev) => {
+      const updated = prev.filter((inv) => inv.id !== invitation.id);
       localStorage.setItem("sentInvitations", JSON.stringify(updated));
       return updated;
     });
@@ -787,7 +862,7 @@ const Chat = () => {
       toUserId: userId,
       invitationData: {
         message: message,
-      }
+      },
     });
   };
 
@@ -798,34 +873,30 @@ const Chat = () => {
         id: "friend1",
         name: "Alice Wang",
         username: "alice_w",
-        status: "online",
         avatar: "👩",
-        lastSeen: new Date().toISOString()
+        lastSeen: new Date().toISOString(),
       },
       {
-        id: "friend2", 
+        id: "friend2",
         name: "Bob Chen",
         username: "bob_chen",
-        status: "away",
         avatar: "👨",
-        lastSeen: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+        lastSeen: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       },
       {
         id: "friend3",
         name: "Carol Li",
         username: "carol_l",
-        status: "offline",
         avatar: "👩‍💼",
-        lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "friend4",
         name: "David Zhang",
         username: "david_z",
-        status: "online",
         avatar: "👨‍💻",
-        lastSeen: new Date().toISOString()
-      }
+        lastSeen: new Date().toISOString(),
+      },
     ];
 
     setFriends(mockFriends);
@@ -839,22 +910,22 @@ const Chat = () => {
           id: "user1",
           name: "Emma Liu",
           username: "emma_l",
-          avatar: "👩‍🎨"
+          avatar: "👩‍🎨",
         },
         message: "Hi! Would you like to be friends?",
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "inv2",
         from: {
-          id: "user2", 
+          id: "user2",
           name: "James Wu",
           username: "james_wu",
-          avatar: "👨‍🚀"
+          avatar: "👨‍🚀",
         },
         message: "Want to be friends!",
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
-      }
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      },
     ];
 
     const mockSentInvitations = [
@@ -864,12 +935,12 @@ const Chat = () => {
           id: "user3",
           name: "Sophie Chen",
           username: "sophie_c",
-          avatar: "👩‍💼"
+          avatar: "👩‍💼",
         },
         message: "Hello! Would you like to add me as a friend?",
         timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-        status: "pending"
-      }
+        status: "pending",
+      },
     ];
 
     setReceivedInvitations(mockReceivedInvitations);
@@ -885,92 +956,83 @@ const Chat = () => {
   // Section change handler
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
+    // Clear selected room when switching sections
+    setSelectedRoomId(null);
   };
 
   // Calculate unread counts for navigation
   const getUnreadCounts = () => {
-    const roomsUnreadCount = customRooms.reduce((total, room) => total + (room.unreadCount || 0), 0);
+    const roomsUnreadCount = customRooms.reduce(
+      (total, room) => total + (room.unreadCount || 0),
+      0
+    );
     const invitationsUnreadCount = receivedInvitations.length;
     const totalUnreadCount = roomsUnreadCount + invitationsUnreadCount;
-    
+
     return {
       rooms: roomsUnreadCount,
       invitations: invitationsUnreadCount,
       friends: 0, // No unread count for friends tab
-      total: totalUnreadCount
+      total: totalUnreadCount,
     };
   };
 
-  const selectedRoom = 
-    customRooms.find((room) => room.id === selectedRoomId) ||
-    { id: selectedRoomId, name: selectedRoomId, description: "Unknown Room" };
-
-  // Render section content based on active section
-  const renderSectionContent = () => {
-    switch (activeSection) {
-      case "friends":
-        return (
-          <FriendsTab
-            friends={friends}
-            onStartChat={handleStartChat}
-            onRemoveFriend={handleRemoveFriend}
-          />
-        );
-      case "rooms":
-        return (
-          <RoomsTab
-            onRoomSelect={handleRoomSelect}
-            currentRoomId={selectedRoomId}
-            customRooms={customRooms}
-          />
-        );
-      case "invitations":
-        return (
-          <InvitationsTab
-            receivedInvitations={receivedInvitations}
-            sentInvitations={sentInvitations}
-            currentUser={currentUser}
-            onAcceptInvitation={handleAcceptInvitation}
-            onDeclineInvitation={handleDeclineInvitation}
-            onCancelInvitation={handleCancelInvitation}
-            onSendInvitation={handleSendInvitation}
-            sendMessage={sendMessage}
-          />
-        );
-      default:
-        return null;
-    }
+  const selectedRoom = customRooms.find(
+    (room) => room.id === selectedRoomId
+  ) || {
+    id: selectedRoomId,
+    name: selectedRoomId,
+    description: "Unknown Room",
   };
+
+
+
 
   return (
     <div className="chat">
-      {/* Left Vertical Navigation */}
+      {/* Vertical Navigation */}
       <VerticalNavigation
-        currentUser={currentUser}
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
         unreadCounts={getUnreadCounts()}
       />
-      
-      {/* Middle Panel - Content Lists */}
-      <div className="chat__middle-panel">
-        <div className="chat__panel-header">
-          <h2 className="chat__panel-title">
-            {activeSection === 'friends' && '好友'}
-            {activeSection === 'rooms' && '聊天'}
-            {activeSection === 'invitations' && '邀請'}
-          </h2>
+
+      {/* Contact List */}
+      <ContactList
+        activeSection={activeSection}
+        friends={friends}
+        customRooms={customRooms}
+        receivedInvitations={receivedInvitations}
+        sentInvitations={sentInvitations}
+        selectedRoomId={selectedRoomId}
+        unreadCounts={getUnreadCounts()}
+        currentUser={currentUser}
+        onRoomSelect={handleRoomSelect}
+        onStartChat={handleStartChat}
+        onAcceptInvitation={handleAcceptInvitation}
+        onDeclineInvitation={handleDeclineInvitation}
+        onCancelInvitation={handleCancelInvitation}
+        onSendInvitation={handleSendInvitation}
+        sendMessage={sendMessage}
+      />
+
+      {/* Right Chat Area */}
+      <div className="chat__main">
+        <div className="chat__chat-header">
+          <div className="chat-title">
+            {selectedRoom ? selectedRoom.name : "Select a chat room"}
+          </div>
+          <div className="chat-actions">
+            <div className="action-icon">🔍</div>
+            <div className="action-icon">📞</div>
+            <div className="action-icon">≡</div>
+          </div>
         </div>
-        <div className="chat__panel-content">
-          {renderSectionContent()}
-        </div>
-      </div>
-      
-      {/* Right Panel - Chat Area */}
-      <div className="chat__right-panel">
-        <RoomHeader className="chat__header" selectedRoom={selectedRoom} />
+
         <div className="chat__content">
-          {selectedRoomId ? (
+          {selectedRoomId &&
+          (activeSection === "rooms" ||
+            (activeSection === "friends" && selectedRoom)) ? (
             <>
               <div className="chat__messages">
                 <MessagesList
@@ -993,18 +1055,28 @@ const Chat = () => {
           ) : (
             <div className="chat__welcome">
               <div className="chat__welcome-content">
-                <div className="chat__welcome-icon">💬</div>
-                <h2 className="chat__welcome-title">歡迎使用聊天室</h2>
+                <div className="chat__welcome-icon">
+                  {activeSection === "friends" && "👤"}
+                  {activeSection === "rooms" && "💬"}
+                  {activeSection === "invitations" && "➕"}
+                </div>
+                <h2 className="chat__welcome-title">
+                  {activeSection === "friends" && "Friends"}
+                  {activeSection === "rooms" && "Chat Rooms"}
+                  {activeSection === "invitations" && "Invitations"}
+                </h2>
                 <p className="chat__welcome-text">
-                  選擇一個聊天室開始對話，或與朋友開始私人聊天
+                  {activeSection === "friends" && "Click on a friend to start private chat"}
+                  {activeSection === "rooms" && "Select a chat room to start group conversation"}
+                  {activeSection === "invitations" && "Manage friend invitations"}
                 </p>
               </div>
             </div>
           )}
         </div>
       </div>
-      
-      <DevFunctions 
+
+      <DevFunctions
         onGenerateTestMessages={generateTestMessages}
         onClearMessages={handleClearMessages}
         onGenerateStressTest={generateStressTest}

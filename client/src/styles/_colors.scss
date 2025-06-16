@@ -1,0 +1,18 @@
+// Background Colors
+$bg-primary: hsl(0, 0%, 12%);  // Main dark background
+$bg-secondary: #1f1f1f;        // Secondary background
+
+// Text Colors
+$text-primary: #dfdfdf;         // Active/selected text
+$text-secondary: #777777;       // Default text
+$text-hover: #949494;          // Hover text
+
+// UI Colors
+$accent-red: #ed464e;          // Badges, notifications
+$border-color: $bg-primary;    // Borders matching background
+
+// Navigation Colors
+$nav-background: $bg-primary;
+$nav-text-default: $text-secondary;
+$nav-text-hover: $text-hover;
+$nav-text-active: $text-primary;

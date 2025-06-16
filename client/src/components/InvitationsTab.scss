@@ -728,30 +728,6 @@
   white-space: nowrap;
 }
 
-.invitations-tab__search-status {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.invitations-tab__status-indicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  
-  &--online {
-    background: #28a745;
-  }
-  
-  &--offline {
-    background: #6c757d;
-  }
-}
-
-.invitations-tab__status-text {
-  font-size: 9px;
-  color: #666;
-}
 
 .invitations-tab__no-results-icon {
   font-size: 16px;

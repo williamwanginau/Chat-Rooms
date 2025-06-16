@@ -1,0 +1,106 @@
+@import "../styles/colors";
+
+.badge {
+  position: absolute;
+  color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $border-color;
+
+  // Inline variant for placing inside normal document flow
+  &--inline {
+    position: static;
+    margin-top: 2px;
+  }
+
+  // Default variant
+  &--default {
+    background-color: $accent-red;
+  }
+
+  // Additional variants for different use cases
+  &--primary {
+    background-color: #007bff;
+  }
+
+  &--secondary {
+    background-color: #6c757d;
+  }
+
+  &--success {
+    background-color: #28a745;
+  }
+
+  &--warning {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  &--error {
+    background-color: #dc3545;
+  }
+
+  // Size variants
+  &--small {
+    padding: 2px 4px;
+    font-size: 8px;
+    min-width: 14px;
+    height: 16px;
+    top: -2px;
+    right: -6px;
+  }
+
+  &--medium {
+    padding: 4px 6px;
+    font-size: 10px;
+    min-width: 16px;
+    height: 20px;
+    top: 0px;
+    right: -4px;
+  }
+
+  &--large {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 20px;
+    height: 24px;
+    top: -4px;
+    right: -8px;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .badge {
+    &--small {
+      padding: 1px 3px;
+      font-size: 7px;
+      min-width: 12px;
+      height: 14px;
+      top: -1px;
+      right: -4px;
+    }
+
+    &--medium {
+      padding: 2px 4px;
+      font-size: 8px;
+      min-width: 14px;
+      height: 16px;
+      top: -1px;
+      right: -2px;
+    }
+
+    &--large {
+      padding: 3px 5px;
+      font-size: 9px;
+      min-width: 16px;
+      height: 18px;
+      top: -2px;
+      right: -4px;
+    }
+  }
+}
