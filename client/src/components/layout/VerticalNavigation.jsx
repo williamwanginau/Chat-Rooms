@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import Badge from "./Badge";
+import Badge from "../ui/Badge";
 import "./VerticalNavigation.scss";
 
 const VerticalNavigation = ({

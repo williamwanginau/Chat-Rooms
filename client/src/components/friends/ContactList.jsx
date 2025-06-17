@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
-import Badge from "./Badge";
+import Badge from "../ui/Badge";
 import InvitationsTab from "./InvitationsTab";
 import FriendsTab from "./FriendsTab";
-import { formatTimestamp, getRandomColor } from "../utils/uiUtils";
+import { formatTimestamp, getRandomColor } from "../../utils/ui";
 import "./ContactList.scss";
 
 const ContactList = ({
@@ -13,7 +13,6 @@ const ContactList = ({
   receivedInvitations,
   sentInvitations,
   selectedRoomId,
-  unreadCounts,
   currentUser,
   onRoomSelect,
   onStartChat,
@@ -27,8 +26,8 @@ const ContactList = ({
     switch (activeSection) {
       case "friends":
         return (
-          <FriendsTab 
-            friends={friends} 
+          <FriendsTab
+            friends={friends}
             groups={groups}
             onStartChat={onStartChat}
             onStartGroupChat={onRoomSelect}
@@ -113,48 +112,8 @@ const ContactList = ({
     }
   };
 
-  const getSectionTitle = () => {
-    switch (activeSection) {
-      case "friends":
-        return "Friends";
-      case "rooms":
-        return "Chat";
-      case "invitations":
-        return "Invitations";
-      default:
-        return "";
-    }
-  };
-
-  const getSearchPlaceholder = () => {
-    switch (activeSection) {
-      case "friends":
-        return "Search friends";
-      case "rooms":
-        return "Search chats and messages";
-      case "invitations":
-        return "Search invitations";
-      default:
-        return "Search";
-    }
-  };
-
   return (
     <div className="contact-list">
-      {/* <div className="contact-list__header">
-        <h3>{getSectionTitle()}</h3>
-        <div className="header-actions">
-          {unreadCounts.total > 0 && `(${unreadCounts.total})`}
-        </div>
-      </div> */}
-
-      {/* <div className="contact-list__search">
-          <input
-            type="text"
-            placeholder={getSearchPlaceholder()}
-          />
-        </div> */}
-
       <div className="contact-list__content">{renderSectionContent()}</div>
     </div>
   );

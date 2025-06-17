@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import "./MessagesList.scss";
 import MessageComposer from "./MessageComposer";
-import TypingIndicator from "./TypingIndicator";
+import TypingIndicator from "../../pages/Chat/TypingIndicator";
 import { useEffect, useRef } from "react";
 
 const ChatMainContent = ({

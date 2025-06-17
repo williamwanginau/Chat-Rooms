@@ -1,6 +1,6 @@
 import "./MembersList.scss";
 import PropTypes from "prop-types";
-import { getRandomColor } from "../../utils/uiUtils";
+import { getRandomColor } from "../../utils/ui";
 
 
 

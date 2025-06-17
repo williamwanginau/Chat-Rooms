@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import "./InvitationsTab.scss";
-import MESSAGE_TYPES from "../../../shared/messageTypes.json";
+import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 
 const InvitationsTab = ({ 
   receivedInvitations = [], 

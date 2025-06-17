@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import ContactItem from "./ContactItem";
-import SearchInput from "./SearchInput";
+import SearchInput from "../ui/SearchInput";
 import "./FriendsTab.scss";
 
 const FriendsTab = ({

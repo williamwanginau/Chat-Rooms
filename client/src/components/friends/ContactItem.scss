@@ -18,22 +18,11 @@
   }
 
   // Variant styles
-  &--friend {
-    // Specific styles for friend variant
-  }
 
   &--room {
     .contact-item__avatar-circle {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
-  }
-
-  &--member {
-    // Specific styles for member variant
-  }
-
-  &--invitation {
-    // Specific styles for invitation variant
   }
 
   &__avatar {

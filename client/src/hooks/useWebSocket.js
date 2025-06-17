@@ -230,7 +230,7 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
         case MESSAGE_TYPES.FRIEND_ADDED:
           
           // Import friendship utils dynamically
-          import('../utils/friendshipUtils.js').then(({ createFriendship }) => {
+          import('../utils/friendship.js').then(({ createFriendship }) => {
             // Create friendship using the data from server
             if (messageData.friendshipData) {
               const created = createFriendship(

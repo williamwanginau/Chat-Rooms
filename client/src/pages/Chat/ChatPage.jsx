@@ -1,15 +1,15 @@
-import MessagesList from "./MessagesList";
-import MembersList from "./MembersList";
-import RoomHeader from "./RoomHeader";
-import DevFunctions from "../../components/DevFunctions";
-import VerticalNavigation from "../../components/VerticalNavigation";
-import ContactList from "../../components/ContactList";
+import MessagesList from "../../components/chat/MessagesList";
+import MembersList from "../../components/chat/MembersList";
+import RoomHeader from "../../components/chat/RoomHeader";
+import DevFunctions from "../../components/layout/DevFunctions";
+import VerticalNavigation from "../../components/layout/VerticalNavigation";
+import ContactList from "../../components/friends/ContactList";
 import "./ChatPage.scss";
 import { useState, useEffect } from "react";
 import useWebSocket from "../../hooks/useWebSocket";
 import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 import PropTypes from "prop-types";
-import { getUserFriendsInfo } from "../../utils/friendshipUtils";
+import { getUserFriendsInfo } from "../../utils/friendship";
 
 const Chat = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null);

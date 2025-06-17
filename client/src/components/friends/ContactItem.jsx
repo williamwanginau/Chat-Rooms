@@ -1,11 +1,10 @@
 import PropTypes from "prop-types";
-import { getRandomColor } from "../utils/uiUtils";
+import { getRandomColor } from "../../utils/ui";
 import "./ContactItem.scss";
 
 const ContactItem = ({
   user,
   onClick,
-  onSecondaryAction,
   variant = "default",
   size = "default",
   showSecondaryText = true,
@@ -17,13 +16,6 @@ const ContactItem = ({
   const handleClick = () => {
     if (onClick) {
       onClick(user);
-    }
-  };
-
-  const handleSecondaryAction = (e) => {
-    e.stopPropagation();
-    if (onSecondaryAction) {
-      onSecondaryAction(user);
     }
   };
 
@@ -72,7 +64,7 @@ const ContactItem = ({
       case "friend":
         return user.status || "Click to start chat";
       case "room":
-        return user.lastMessage || user.description || "No messages";
+        return user.lastMessage || "No messages";
       case "member":
         return user.isCurrentUser ? "Me" : user.username;
       case "invitation":
