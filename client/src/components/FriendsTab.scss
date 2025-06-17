@@ -3,53 +3,28 @@
   flex-direction: column;
   height: 100%;
   background-color: #2c2c2e;
-  
+
   &__header {
     flex-shrink: 0;
     padding: 12px 16px;
-    border-bottom: 1px solid #3a3a3c;
   }
-  
-  &__search {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background-color: #1c1c1e;
-    border-radius: 8px;
-    padding: 8px 12px;
-    
-    &-icon {
-      color: #8e8e93;
-      font-size: 20px;
-      margin-right: 8px;
-    }
-    
-    &-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      font-size: 14px;
-      color: #ffffff;
-      outline: none;
-      
-      &::placeholder {
-        color: #8e8e93;
-      }
-    }
-  }
-  
+
   &__content {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    scrollbar-gutter: stable;
   }
-  
+
   &__section {
     &-header {
-      padding: 16px 16px 8px 16px;
-      border-bottom: 1px solid #3a3a3c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 12px 4px 16px;
+      cursor: pointer;
     }
-    
+
     &-title {
       font-size: 13px;
       font-weight: 600;
@@ -57,136 +32,27 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+
+    &-arrow {
+      font-size: 18px;
+      color: #8e8e93;
+      transition: transform 0.2s ease;
+    }
   }
-  
+
   &__list {
     display: flex;
     flex-direction: column;
-  }
-  
-  &__item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    border-bottom: 1px solid #3a3a3c;
-    
-    &:hover {
-      background-color: #3a3a3c;
-    }
-    
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-  
-  &__item-avatar {
-    position: relative;
-    flex-shrink: 0;
-    margin-right: 12px;
-  }
-  
-  &__avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: #3a3a3c;
-    border-radius: 50%;
-    color: #8e8e93;
-    font-size: 16px;
-    
-    .material-icons {
-      font-size: 24px;
-    }
-  }
-  
-  &__status {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid #2c2c2e;
-    
-    &--online {
-      background: #00c73c;
-    }
-    
-    &--away {
-      background: #ff9500;
-    }
-    
-    &--offline {
-      background: #8e8e93;
-    }
-  }
-  
-  &__item-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  
-  &__item-name {
-    font-size: 16px;
-    font-weight: 500;
-    color: #ffffff;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  &__item-status {
-    font-size: 13px;
-    color: #8e8e93;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  &__item-actions {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  
-  &__action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    background: transparent;
-    color: #8e8e93;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      background-color: #48484a;
-      color: #ffffff;
-    }
-    
-    .material-icons {
-      font-size: 18px;
-    }
-    
-    &--more {
-      &:hover {
-        background-color: #48484a;
+
+    .contact-item {
+      border-bottom: 1px solid #3a3a3c;
+
+      &:last-child {
+        border-bottom: none;
       }
     }
   }
-  
+
   &__empty {
     display: flex;
     flex-direction: column;
@@ -196,13 +62,13 @@
     text-align: center;
     color: #8e8e93;
   }
-  
+
   &__empty-icon {
     font-size: 48px;
     margin-bottom: 12px;
     opacity: 0.5;
   }
-  
+
   &__empty-text {
     font-size: 16px;
     margin: 0;
@@ -210,26 +76,17 @@
   }
 }
 
-/* 響應式設計 */
+/* Responsive Design */
 @media (max-width: 992px) {
   .friends-tab {
-    &__item {
-      padding: 10px 12px;
+    &__section-header {
+      padding: 6px 12px 6px 20px;
     }
-    
-    &__avatar {
-      width: 42px;
-      height: 42px;
-      
-      .material-icons {
-        font-size: 20px;
-      }
+
+    &__section-arrow {
+      font-size: 17px;
     }
-    
-    &__status {
-      width: 10px;
-      height: 10px;
-    }
+
   }
 }
 
@@ -238,43 +95,13 @@
     &__header {
       padding: 8px 12px;
     }
-    
-    &__search {
-      padding: 6px 10px;
-    }
-    
+
     &__section-header {
-      padding: 12px 12px 6px 12px;
+      padding: 8px 20px;
     }
-    
-    &__item {
-      padding: 8px 12px;
-    }
-    
-    &__avatar {
-      width: 36px;
-      height: 36px;
-      
-      .material-icons {
-        font-size: 18px;
-      }
-    }
-    
-    &__item-name {
-      font-size: 14px;
-    }
-    
-    &__item-status {
-      font-size: 12px;
-    }
-    
-    &__action-btn {
-      width: 28px;
-      height: 28px;
-      
-      .material-icons {
-        font-size: 16px;
-      }
+
+    &__section-arrow {
+      font-size: 16px;
     }
   }
 }

@@ -1,12 +1,14 @@
 import PropTypes from "prop-types";
 import Badge from "./Badge";
 import InvitationsTab from "./InvitationsTab";
+import FriendsTab from "./FriendsTab";
 import { formatTimestamp, getRandomColor } from "../utils/uiUtils";
 import "./ContactList.scss";
 
 const ContactList = ({
   activeSection,
   friends,
+  groups = [],
   customRooms,
   receivedInvitations,
   sentInvitations,
@@ -21,45 +23,18 @@ const ContactList = ({
   onSendInvitation,
   sendMessage,
 }) => {
-
   const renderSectionContent = () => {
     switch (activeSection) {
       case "friends":
-        if (friends.length === 0) {
-          return (
-            <div className="contact-list__empty">
-              <div className="empty-icon">👤</div>
-              <div className="empty-title">No Friends</div>
-              <div className="empty-subtitle">Go to invitations to add friends</div>
-            </div>
-          );
-        }
-        return friends.map((friend) => (
-          <div
-            key={friend.id}
-            className="contact-item"
-            onClick={() => onStartChat(friend)}
-          >
-            <div
-              className="contact-avatar"
-              style={{ backgroundColor: getRandomColor(friend.id) }}
-            >
-              {friend.avatar?.startsWith("http") ? (
-                <img src={friend.avatar} alt={friend.name} />
-              ) : (
-                friend.avatar || "👤"
-              )}
-            </div>
-
-            <div className="contact-info">
-              <div className="contact-name">{friend.name}</div>
-              <div className="contact-message">
-                Click to start chat
-              </div>
-            </div>
-
-          </div>
-        ));
+        return (
+          <FriendsTab 
+            friends={friends} 
+            groups={groups}
+            onStartChat={onStartChat}
+            onStartGroupChat={onRoomSelect}
+            currentUser={currentUser}
+          />
+        );
 
       case "rooms":
         if (customRooms.length === 0) {
@@ -67,7 +42,9 @@ const ContactList = ({
             <div className="contact-list__empty">
               <div className="empty-icon">💬</div>
               <div className="empty-title">No Chat Rooms</div>
-              <div className="empty-subtitle">Create a new room or join existing rooms</div>
+              <div className="empty-subtitle">
+                Create a new room or join existing rooms
+              </div>
             </div>
           );
         }
@@ -100,8 +77,8 @@ const ContactList = ({
               <div className="time">
                 {formatTimestamp(room.lastMessageTime)}
               </div>
-              <Badge 
-                count={room.unreadCount} 
+              <Badge
+                count={room.unreadCount}
                 maxCount={99}
                 variant="default"
                 size="medium"
@@ -164,23 +141,21 @@ const ContactList = ({
 
   return (
     <div className="contact-list">
-      <div className="contact-list__header">
+      {/* <div className="contact-list__header">
         <h3>{getSectionTitle()}</h3>
         <div className="header-actions">
           {unreadCounts.total > 0 && `(${unreadCounts.total})`}
         </div>
-      </div>
+      </div> */}
 
-      <div className="contact-list__search">
-        <input
-          type="text"
-          placeholder={getSearchPlaceholder()}
-        />
-      </div>
+      {/* <div className="contact-list__search">
+          <input
+            type="text"
+            placeholder={getSearchPlaceholder()}
+          />
+        </div> */}
 
-      <div className="contact-list__content">
-        {renderSectionContent()}
-      </div>
+      <div className="contact-list__content">{renderSectionContent()}</div>
     </div>
   );
 };
@@ -188,6 +163,7 @@ const ContactList = ({
 ContactList.propTypes = {
   activeSection: PropTypes.string.isRequired,
   friends: PropTypes.array.isRequired,
+  groups: PropTypes.array,
   customRooms: PropTypes.array.isRequired,
   receivedInvitations: PropTypes.array.isRequired,
   sentInvitations: PropTypes.array.isRequired,

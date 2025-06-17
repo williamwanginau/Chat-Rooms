@@ -4,7 +4,6 @@
     "username": "alice1234",
     "name": "Alice",
     "email": "alice@example.com",
-    "online": true,
     "lastSeen": "2023-10-01T10:00:00Z",
     "friends": ["c9e2a5f8-6d7b-4c3e-8a1f-7b4d9c6e2a5f"]
   },
@@ -13,7 +12,6 @@
     "username": "bob1234",
     "name": "Bob",
     "email": "bob@example.com",
-    "online": false,
     "lastSeen": "2023-10-01T09:30:00Z"
   },
   {
@@ -21,7 +19,6 @@
     "username": "charlie1234",
     "name": "Charlie",
     "email": "charlie@example.com",
-    "online": true,
     "lastSeen": "2023-10-01T08:45:00Z",
     "friends": ["a7f8e9c2-4b3d-4f2a-8e1c-9b6d3f7a2c8e"]
   },
@@ -30,7 +27,6 @@
     "username": "david1234",
     "name": "David",
     "email": "david@example.com",
-    "online": false,
     "lastSeen": "2023-10-01T07:20:00Z"
   },
   {
@@ -38,7 +34,6 @@
     "username": "eve1234",
     "name": "Eve",
     "email": "eve@example.com",
-    "online": true,
     "lastSeen": "2023-10-01T06:50:00Z"
   }
 ]

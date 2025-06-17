@@ -16,6 +16,7 @@ const Chat = () => {
   const [customRooms, setCustomRooms] = useState([]);
   const [activeSection, setActiveSection] = useState("rooms");
   const [friends, setFriends] = useState([]);
+  const [testGroups, setTestGroups] = useState([]);
   const [receivedInvitations, setReceivedInvitations] = useState([]);
   const [sentInvitations, setSentInvitations] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -118,6 +119,32 @@ const Chat = () => {
         }))
       );
     }
+
+    // Load test data if it exists
+    const loadTestData = () => {
+      const testFriendsData = localStorage.getItem("testFriends");
+      const testGroupsData = localStorage.getItem("testGroups");
+      
+      if (testFriendsData) {
+        try {
+          const testFriends = JSON.parse(testFriendsData);
+          setFriends(prev => [...prev, ...testFriends]);
+        } catch (error) {
+          console.error("Failed to parse test friends:", error);
+        }
+      }
+      
+      if (testGroupsData) {
+        try {
+          const testGroups = JSON.parse(testGroupsData);
+          setTestGroups(testGroups);
+        } catch (error) {
+          console.error("Failed to parse test groups:", error);
+        }
+      }
+    };
+
+    loadTestData();
   }, []);
 
   // Handle friend invitation events
@@ -239,6 +266,21 @@ const Chat = () => {
       });
     };
 
+    const handleTestDataGenerated = (event) => {
+      const { friends: testFriends, groups: testGroups } = event.detail;
+      setFriends(prev => {
+        // Remove existing test data first
+        const realFriends = prev.filter(f => !f.id.startsWith('friend'));
+        return [...realFriends, ...testFriends];
+      });
+      setTestGroups(testGroups);
+    };
+
+    const handleTestDataRemoved = () => {
+      setFriends(prev => prev.filter(f => !f.id.startsWith('friend')));
+      setTestGroups([]);
+    };
+
     const handleNewMessage = (event) => {
       const { roomId, message, timestamp, sender } = event.detail;
 
@@ -279,6 +321,8 @@ const Chat = () => {
     window.addEventListener("friendsListSync", handleFriendsListSync);
     window.addEventListener("privateChatCreated", handlePrivateChatCreated);
     window.addEventListener("newMessage", handleNewMessage);
+    window.addEventListener("testDataGenerated", handleTestDataGenerated);
+    window.addEventListener("testDataRemoved", handleTestDataRemoved);
 
     // Cleanup event listeners
     return () => {
@@ -308,6 +352,8 @@ const Chat = () => {
         "privateChatCreated",
         handlePrivateChatCreated
       );
+      window.removeEventListener("testDataGenerated", handleTestDataGenerated);
+      window.removeEventListener("testDataRemoved", handleTestDataRemoved);
     };
   }, []);
 
@@ -1001,6 +1047,7 @@ const Chat = () => {
       <ContactList
         activeSection={activeSection}
         friends={friends}
+        groups={testGroups}
         customRooms={customRooms}
         receivedInvitations={receivedInvitations}
         sentInvitations={sentInvitations}
