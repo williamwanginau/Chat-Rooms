@@ -1,17 +1,16 @@
 import MessagesList from "../../components/chat/MessagesList";
-import MembersList from "../../components/chat/MembersList";
-import RoomHeader from "../../components/chat/RoomHeader";
 import DevFunctions from "../../components/layout/DevFunctions";
 import VerticalNavigation from "../../components/layout/VerticalNavigation";
-import ContactList from "../../components/friends/ContactList";
-import "./ChatPage.scss";
+import SidebarContainer from "../../components/sidebar/SidebarContainer";
+import "./MainPage.scss";
 import { useState, useEffect } from "react";
 import useWebSocket from "../../hooks/useWebSocket";
 import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 import PropTypes from "prop-types";
 import { getUserFriendsInfo } from "../../utils/friendship";
+import { MockManager } from "../../utils/mock";
 
-const Chat = () => {
+const MainPage = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [customRooms, setCustomRooms] = useState([]);
   const [activeSection, setActiveSection] = useState("rooms");
@@ -24,7 +23,6 @@ const Chat = () => {
   const {
     messages,
     setMessages,
-    roomUsers,
     typingUsers,
     sendMessage,
     joinRoom,
@@ -999,6 +997,19 @@ const Chat = () => {
     setSentInvitations([]);
   };
 
+  // Generate mock chat rooms using external mock manager
+  const generateMockRooms = () => {
+    return MockManager.generateAndAddMockRooms(currentUser, setCustomRooms);
+  };
+
+  const removeMockRooms = () => {
+    return MockManager.removeMockRooms(setCustomRooms);
+  };
+
+  const clearAllRooms = () => {
+    return MockManager.clearAllRooms(setCustomRooms);
+  };
+
   // Section change handler
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
@@ -1044,7 +1055,7 @@ const Chat = () => {
       />
 
       {/* Contact List */}
-      <ContactList
+      <SidebarContainer
         activeSection={activeSection}
         friends={friends}
         groups={testGroups}
@@ -1092,12 +1103,6 @@ const Chat = () => {
                   onTypingStop={handleTypingStop}
                 />
               </div>
-              <div className="chat__members">
-                <MembersList
-                  roomUsers={roomUsers}
-                  currentUserId={currentUser?.id}
-                />
-              </div>
             </>
           ) : (
             <div className="chat__welcome">
@@ -1135,17 +1140,20 @@ const Chat = () => {
         onGenerateFriends={generateFriends}
         onGenerateInvitations={generateInvitations}
         onClearFriendsData={clearFriendsData}
+        onGenerateMockRooms={generateMockRooms}
+        onRemoveMockRooms={removeMockRooms}
+        onClearAllRooms={clearAllRooms}
         sendMessage={sendMessage}
       />
     </div>
   );
 };
 
-Chat.propTypes = {
+MainPage.propTypes = {
   messages: PropTypes.array,
   currentUser: PropTypes.object,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,
 };
 
-export default Chat;
+export default MainPage;

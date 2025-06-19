@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import ListItem from "../common/ListItem";
 import "./InvitationsTab.scss";
 import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
 
@@ -361,17 +362,16 @@ const InvitationsTab = ({
               <div className="invitations-tab__list">
                 {allReceivedInvitations.map((invitation) => (
                   <div key={invitation.id} className="invitations-tab__item">
-                    <div className="invitations-tab__item-avatar">
-                      <span className="invitations-tab__avatar">{invitation.from.avatar}</span>
-                    </div>
-                    
-                    <div className="invitations-tab__item-info">
-                      <h4 className="invitations-tab__item-name">{invitation.from.name}</h4>
-                      <p className="invitations-tab__item-username">@{invitation.from.username}</p>
-                      <p className="invitations-tab__item-message">{invitation.message}</p>
-                      <p className="invitations-tab__item-time">{formatTime(invitation.timestamp)}</p>
-                    </div>
-                    
+                    <ListItem
+                      user={{
+                        ...invitation.from,
+                        status: invitation.message,
+                        secondaryText: `@${invitation.from.username} • ${formatTime(invitation.timestamp)}`
+                      }}
+                      variant="invitation"
+                      onClick={null}
+                      showSecondaryText={true}
+                    />
                     <div className="invitations-tab__item-actions">
                       <button
                         className="invitations-tab__action-btn invitations-tab__action-btn--accept"
@@ -404,20 +404,16 @@ const InvitationsTab = ({
               <div className="invitations-tab__list">
                 {allSentInvitations.map((invitation) => (
                   <div key={invitation.id} className="invitations-tab__item">
-                    <div className="invitations-tab__item-avatar">
-                      <span className="invitations-tab__avatar">{invitation.to.avatar}</span>
-                    </div>
-                    
-                    <div className="invitations-tab__item-info">
-                      <h4 className="invitations-tab__item-name">{invitation.to.name}</h4>
-                      <p className="invitations-tab__item-username">@{invitation.to.username}</p>
-                      <p className="invitations-tab__item-message">{invitation.message}</p>
-                      <p className="invitations-tab__item-time">{formatTime(invitation.timestamp)}</p>
-                      <span className="invitations-tab__status invitations-tab__status--pending">
-                        Pending
-                      </span>
-                    </div>
-                    
+                    <ListItem
+                      user={{
+                        ...invitation.to,
+                        status: invitation.message,
+                        secondaryText: `@${invitation.to.username} • ${formatTime(invitation.timestamp)} • Pending`
+                      }}
+                      variant="invitation"
+                      onClick={null}
+                      showSecondaryText={true}
+                    />
                     <div className="invitations-tab__item-actions">
                       <button
                         className="invitations-tab__action-btn invitations-tab__action-btn--cancel"
@@ -463,21 +459,18 @@ const InvitationsTab = ({
                     </div>
                     {searchResults.map((user) => (
                       <div key={user.id} className="invitations-tab__search-item">
-                        <div className="invitations-tab__search-avatar">
-                          {user.avatar || '👤'}
-                        </div>
-                        <div className="invitations-tab__search-info">
-                          <div className="invitations-tab__search-username">{user.username}</div>
-                          <div className="invitations-tab__search-details">
-                            <span className="invitations-tab__search-id">ID: {user.id}</span>
-                            {user.email && (
-                              <span className="invitations-tab__search-email">{user.email}</span>
-                            )}
-                          </div>
-                        </div>
+                        <ListItem
+                          user={{
+                            ...user,
+                            status: `ID: ${user.id}${user.email ? ` • ${user.email}` : ''}`
+                          }}
+                          variant="invitation"
+                          onClick={null}
+                          showSecondaryText={true}
+                        />
                         <button
                           className="invitations-tab__invite-btn"
-                          onClick={() => handleInviteUser(user)}
+                          onClick={() => handleSendInvitation(user)}
                         >
                           📨 Invite
                         </button>

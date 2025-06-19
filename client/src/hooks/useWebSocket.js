@@ -3,7 +3,6 @@ import MESSAGE_TYPES from "../../../shared/messageTypes.json";
 
 const useWebSocket = (currentUser, initialRoomId = null) => {
   const [messages, setMessages] = useState([]);
-  const [roomUsers, setRoomUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
   const wsRef = useRef(null);
   const [isUserInfoSent, setIsUserInfoSent] = useState(false);
@@ -88,11 +87,7 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
             }));
           }
           break;
-        case MESSAGE_TYPES.ROOM_USERS:
-          setRoomUsers(messageData.users);
-          break;
         case MESSAGE_TYPES.USER_JOINED:
-          setRoomUsers((prevUsers) => [...prevUsers, messageData.user]);
           // Add system message for user joining
           const joinUserName = messageData.user.name || messageData.user.username || 'Unknown User';
           setMessages((prevMessages) => [...prevMessages, {
@@ -104,9 +99,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           }]);
           break;
         case MESSAGE_TYPES.USER_LEFT:
-          setRoomUsers((prevUsers) =>
-            prevUsers.filter((user) => user.username !== messageData.user.username)
-          );
           // Add system message for user leaving
           const leaveUserName = messageData.user.name || messageData.user.username || 'Unknown User';
           setMessages((prevMessages) => [...prevMessages, {
@@ -133,16 +125,7 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
           });
           break;
         case MESSAGE_TYPES.USER_INFO_UPDATED:
-          // Update room users using id to find the user, then update with new info
-          setRoomUsers((prevUsers) => 
-            prevUsers.map(user => 
-              user.id === messageData.oldUser?.id 
-                ? { ...user, ...messageData.newUser }
-                : user
-            )
-          );
-          
-          // Also update localStorage users array to keep it in sync
+          // Update localStorage users array to keep it in sync
           const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
           const updatedUsers = existingUsers.map(user => 
             user.id === messageData.oldUser?.id
@@ -286,7 +269,6 @@ const useWebSocket = (currentUser, initialRoomId = null) => {
   return {
     messages,
     setMessages,
-    roomUsers,
     typingUsers,
     sendMessage,
     joinRoom,

@@ -23,6 +23,10 @@
       justify-content: space-between;
       padding: 4px 12px 4px 16px;
       cursor: pointer;
+      
+      &:hover {
+        background-color: transparent;
+      }
     }
 
     &-title {
@@ -44,7 +48,7 @@
     display: flex;
     flex-direction: column;
 
-    .contact-item {
+    .list-item {
       border-bottom: 1px solid #3a3a3c;
 
       &:last-child {
@@ -76,6 +80,38 @@
   }
 }
 
+// Empty state styles
+.contact-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #8e8e93;
+  min-height: 200px;
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #a0a0a2;
+  }
+
+  .empty-subtitle {
+    font-size: 14px;
+    color: #8e8e93;
+    line-height: 1.4;
+    max-width: 280px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 992px) {
   .friends-tab {
@@ -86,7 +122,6 @@
     &__section-arrow {
       font-size: 17px;
     }
-
   }
 }
 

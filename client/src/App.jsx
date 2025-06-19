@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Chat from "./pages/Chat/ChatPage.jsx";
+import MainPage from "./pages/Chat/MainPage.jsx";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
 
@@ -10,7 +10,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/chat" element={<Chat />} />
+          <Route path="/chat" element={<MainPage />} />
         </Routes>
       </BrowserRouter>
     </div>

@@ -1,4 +1,4 @@
-.contact-item {
+.list-item {
   display: flex;
   align-items: center;
   padding: 10px 12px;
@@ -20,7 +20,7 @@
   // Variant styles
 
   &--room {
-    .contact-item__avatar-circle {
+    .list-item__avatar-circle {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
   }
@@ -83,9 +83,16 @@
 
   &__meta {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
     flex-shrink: 0;
-    gap: 8px;
+    gap: 4px;
+  }
+
+  &__time {
+    font-size: 11px;
+    color: #8e8e93;
+    white-space: nowrap;
   }
 
   &__badge {
@@ -95,10 +102,10 @@
 }
 
 // Size variants
-.contact-item--small {
+.list-item--small {
   padding: 8px 12px;
 
-  .contact-item__avatar-circle {
+  .list-item__avatar-circle {
     width: 36px;
     height: 36px;
 
@@ -107,15 +114,15 @@
     }
   }
 
-  .contact-item__name {
+  .list-item__name {
     font-size: 14px;
   }
 
-  .contact-item__secondary {
+  .list-item__secondary {
     font-size: 12px;
   }
 
-  .contact-item__action-btn {
+  .list-item__action-btn {
     width: 28px;
     height: 28px;
 
@@ -124,20 +131,20 @@
     }
   }
 
-  .contact-item__status {
+  .list-item__status {
     width: 10px;
     height: 10px;
   }
 }
 
-.contact-item--large {
+.list-item--large {
   padding: 16px;
 
-  .contact-item__avatar {
+  .list-item__avatar {
     margin-right: 14px;
   }
 
-  .contact-item__avatar-circle {
+  .list-item__avatar-circle {
     width: 52px;
     height: 52px;
 
@@ -146,12 +153,12 @@
     }
   }
 
-  .contact-item__name {
+  .list-item__name {
     font-size: 17px;
     font-weight: 600;
   }
 
-  .contact-item__secondary {
+  .list-item__secondary {
     font-size: 13px;
   }
 }
@@ -159,7 +166,7 @@
 // Responsive design
 
 @media (max-width: 768px) {
-  .contact-item {
+  .list-item {
     padding: 8px 12px;
 
     &__avatar-circle {
@@ -180,12 +187,12 @@
     }
   }
 
-  .contact-item--large {
-    .contact-item__avatar {
+  .list-item--large {
+    .list-item__avatar {
       margin-right: 12px;
     }
 
-    .contact-item__avatar-circle {
+    .list-item__avatar-circle {
       width: 44px;
       height: 44px;
 
@@ -194,11 +201,11 @@
       }
     }
 
-    .contact-item__name {
+    .list-item__name {
       font-size: 16px;
     }
 
-    .contact-item__secondary {
+    .list-item__secondary {
       font-size: 12px;
     }
   }

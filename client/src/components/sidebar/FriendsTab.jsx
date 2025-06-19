@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import ContactItem from "./ContactItem";
+import ListItem from "../common/ListItem";
 import SearchInput from "../ui/SearchInput";
 import "./FriendsTab.scss";
 
@@ -28,7 +28,12 @@ const FriendsTab = ({
     (group) =>
       (group.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (group.description || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a, b) => {
+    // Sort groups by last message time (newest first)
+    const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+    const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+    return timeB - timeA;
+  });
 
   return (
     <div className="friends-tab">
@@ -44,7 +49,7 @@ const FriendsTab = ({
 
       {/* User Info - Hidden when searching */}
       {currentUser && !searchTerm && (
-        <ContactItem
+        <ListItem
           user={currentUser}
           size="default"
           showSecondaryText={true}
@@ -71,7 +76,7 @@ const FriendsTab = ({
             {friendsExpanded && (
               <div className="friends-tab__list">
                 {filteredFriends.map((friend) => (
-                  <ContactItem
+                  <ListItem
                     key={friend.id}
                     user={friend}
                     variant="friend"
@@ -102,7 +107,7 @@ const FriendsTab = ({
             {groupsExpanded && (
               <div className="friends-tab__list">
                 {filteredGroups.map((group) => (
-                  <ContactItem
+                  <ListItem
                     key={group.id}
                     user={group}
                     variant="room"

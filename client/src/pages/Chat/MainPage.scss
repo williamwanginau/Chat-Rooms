@@ -1,6 +1,6 @@
 :root {
     --nav-sidebar-width: 60px;
-    --contact-list-width: 320px;
+    --sidebar-container-width: 320px;
     --header-height: 60px;
     
     --nav-background: #1e1e1e;
@@ -110,13 +110,6 @@
         background-color: var(--chat-background);
     }
 
-    &__members {
-        width: 250px;
-        border-left: 1px solid var(--border-color);
-        overflow: hidden;
-        background-color: var(--contact-background);
-        box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-    }
 
     &__input-container {
         padding: 15px 20px;
@@ -300,20 +293,20 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
     :root {
-        --contact-list-width: 280px;
+        --sidebar-container-width: 280px;
     }
 }
 
 @media (max-width: 992px) {
     :root {
-        --contact-list-width: 260px;
+        --sidebar-container-width: 260px;
         --header-height: 55px;
     }
 }
 
 @media (max-width: 768px) {
     :root {
-        --contact-list-width: 240px;
+        --sidebar-container-width: 240px;
         --header-height: 50px;
     }
 }

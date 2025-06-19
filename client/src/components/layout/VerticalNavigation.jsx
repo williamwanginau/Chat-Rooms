@@ -34,9 +34,9 @@ const VerticalNavigation = ({
             >
               {item.icon}
             </span>
-            <Badge 
-              count={unreadCounts[item.id] || 0} 
-              maxCount={99}
+            <Badge
+              count={unreadCounts[item.id] || 0}
+              maxCount={999}
               variant="default"
               size="medium"
             />

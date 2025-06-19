@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
-import { getRandomColor } from "../../utils/ui";
-import "./ContactItem.scss";
+import { getRandomColor, formatTimestamp } from "../../utils/ui";
+import "./ListItem.scss";
 
-const ContactItem = ({
+const ListItem = ({
   user,
   onClick,
   variant = "default",
@@ -12,6 +12,7 @@ const ContactItem = ({
   badge = null,
   customAvatar = null,
   className = "",
+  timestamp = null,
 }) => {
   const handleClick = () => {
     if (onClick) {
@@ -32,7 +33,7 @@ const ContactItem = ({
           <img
             src={user.avatar}
             alt={user.name}
-            className="contact-item__avatar-img"
+            className="list-item__avatar-img"
           />
         ) : (
           user.avatar
@@ -45,7 +46,7 @@ const ContactItem = ({
 
     return (
       <div
-        className="contact-item__avatar-circle"
+        className="list-item__avatar-circle"
         style={{
           backgroundColor: user.avatar?.startsWith("http")
             ? "transparent"
@@ -76,28 +77,33 @@ const ContactItem = ({
 
   return (
     <div
-      className={`contact-item contact-item--${variant} contact-item--${size} ${
-        isActive ? "contact-item--active" : ""
+      className={`list-item list-item--${variant} list-item--${size} ${
+        isActive ? "list-item--active" : ""
       } ${className}`}
       onClick={handleClick}
     >
-      <div className="contact-item__avatar">{renderAvatar()}</div>
+      <div className="list-item__avatar">{renderAvatar()}</div>
 
-      <div className="contact-item__info">
-        <div className="contact-item__name">
+      <div className="list-item__info">
+        <div className="list-item__name">
           {user.name || user.username || user.displayName || "Unknown"}
         </div>
-        <div className="contact-item__secondary">{renderSecondaryText()}</div>
+        <div className="list-item__secondary">{renderSecondaryText()}</div>
       </div>
 
-      <div className="contact-item__meta">
-        {badge && <div className="contact-item__badge">{badge}</div>}
+      <div className="list-item__meta">
+        {timestamp && variant === "room" && (
+          <div className="list-item__time">
+            {formatTimestamp(timestamp)}
+          </div>
+        )}
+        {badge && <div className="list-item__badge">{badge}</div>}
       </div>
     </div>
   );
 };
 
-ContactItem.propTypes = {
+ListItem.propTypes = {
   user: PropTypes.shape({
     id: PropTypes.string.isRequired,
     name: PropTypes.string,
@@ -124,6 +130,7 @@ ContactItem.propTypes = {
   badge: PropTypes.node,
   customAvatar: PropTypes.node,
   className: PropTypes.string,
+  timestamp: PropTypes.string,
 };
 
-export default ContactItem;
+export default ListItem;

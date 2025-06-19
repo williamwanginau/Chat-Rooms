@@ -37,6 +37,19 @@ export const formatTimestamp = (timestamp) => {
     return days[date.getDay()];
   }
 
+  // Check if it's over one year ago
+  const oneYearAgo = new Date(now);
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  
+  if (date < oneYearAgo) {
+    // Over one year ago - show full date with year
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
+  // Within one year - show month/day
   return date.toLocaleDateString("en-US", {
     month: "numeric",
     day: "numeric",

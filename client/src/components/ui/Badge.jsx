@@ -3,7 +3,7 @@ import "./Badge.scss";
 
 const Badge = ({ 
   count, 
-  maxCount = 99, 
+  maxCount = 999, 
   variant = "default",
   size = "medium",
   className = "",

@@ -5,12 +5,16 @@ import "./DevFunctions.scss";
 const DevFunctions = ({ 
   onGenerateTestMessages, 
   onClearMessages,
-  onClearFriendsData
+  onClearFriendsData,
+  onGenerateMockRooms,
+  onRemoveMockRooms,
+  onClearAllRooms
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [hasTestData, setHasTestData] = useState(false);
+  const [hasMockRooms, setHasMockRooms] = useState(false);
 
   const togglePanel = () => {
     setIsOpen(!isOpen);
@@ -22,9 +26,22 @@ const DevFunctions = ({
       const users = JSON.parse(localStorage.getItem("users") || "[]");
       const current = JSON.parse(localStorage.getItem("currentUser") || "null");
       const testDataExists = localStorage.getItem("testFriendsAndGroups") === "true";
+      
+      // Check if mock rooms exist
+      const customRooms = JSON.parse(localStorage.getItem("customRooms") || "[]");
+      const mockRoomIds = [
+        "private_alice_mock", "private_bob_mock", "private_carol_mock", "private_david_mock", 
+        "private_emma_mock", "private_frank_mock", "private_grace_mock",
+        "group_frontend_team", "group_design_team", "group_project_alpha", 
+        "group_coffee_chat", "group_tech_news", "group_book_club", "group_gaming_squad",
+        "group_workout_buddies", "group_travel_plans", "group_old_school_friends"
+      ];
+      const mockRoomsExist = mockRoomIds.some(id => customRooms.find(room => room.id === id));
+      
       setAvailableUsers(users);
       setCurrentUser(current);
       setHasTestData(testDataExists);
+      setHasMockRooms(mockRoomsExist);
     };
 
     loadUsers();
@@ -171,6 +188,36 @@ const DevFunctions = ({
     }
   };
 
+  const handleGenerateMockRooms = () => {
+    try {
+      const result = onGenerateMockRooms();
+      setHasMockRooms(true);
+      alert(`Generated ${result.privateCount} private chats and ${result.groupCount} group chats!`);
+    } catch (error) {
+      console.error('Error generating mock rooms:', error);
+      alert('Error occurred while generating mock rooms');
+    }
+  };
+
+  const handleRemoveMockRooms = () => {
+    try {
+      onRemoveMockRooms();
+      setHasMockRooms(false);
+      alert('Mock chat rooms removed!');
+    } catch (error) {
+      console.error('Error removing mock rooms:', error);
+      alert('Error occurred while removing mock rooms');
+    }
+  };
+
+  const toggleMockRooms = () => {
+    if (hasMockRooms) {
+      handleRemoveMockRooms();
+    } else {
+      handleGenerateMockRooms();
+    }
+  };
+
   return (
     <div className={`dev-functions ${isOpen ? "dev-functions--open" : ""}`}>
       <button 
@@ -241,6 +288,20 @@ const DevFunctions = ({
                   ✅ Test data is active (10 friends, 7 groups)
                 </p>
               )}
+
+              <button 
+                className={`dev-functions__button ${hasMockRooms ? 'dev-functions__button--success' : ''}`}
+                onClick={toggleMockRooms}
+                title={hasMockRooms ? "Remove mock chat rooms" : "Generate mock chat rooms"}
+              >
+                {hasMockRooms ? '🗑️ Remove' : '💬 Generate'} Mock Chat Rooms
+              </button>
+              
+              {hasMockRooms && (
+                <p className="dev-functions__info">
+                  ✅ Mock rooms active (7 private, 10 groups)
+                </p>
+              )}
             </div>
 
             <div className="dev-functions__section">
@@ -251,6 +312,14 @@ const DevFunctions = ({
                 title="Clear all messages in current room"
               >
                 🗑️ Clear Messages
+              </button>
+
+              <button 
+                className="dev-functions__button dev-functions__button--danger"
+                onClick={onClearAllRooms}
+                title="Clear all chat rooms"
+              >
+                🗑️ Clear All Rooms
               </button>
               
               <button 
@@ -272,6 +341,9 @@ DevFunctions.propTypes = {
   onGenerateTestMessages: PropTypes.func.isRequired,
   onClearMessages: PropTypes.func.isRequired,
   onClearFriendsData: PropTypes.func,
+  onGenerateMockRooms: PropTypes.func,
+  onRemoveMockRooms: PropTypes.func,
+  onClearAllRooms: PropTypes.func,
 };
 
 export default DevFunctions;

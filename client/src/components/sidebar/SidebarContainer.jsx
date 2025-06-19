@@ -1,11 +1,10 @@
 import PropTypes from "prop-types";
-import Badge from "../ui/Badge";
 import InvitationsTab from "./InvitationsTab";
 import FriendsTab from "./FriendsTab";
-import { formatTimestamp, getRandomColor } from "../../utils/ui";
-import "./ContactList.scss";
+import RoomsTab from "./RoomsTab";
+import "./SidebarContainer.scss";
 
-const ContactList = ({
+const SidebarContainer = ({
   activeSection,
   friends,
   groups = [],
@@ -36,57 +35,14 @@ const ContactList = ({
         );
 
       case "rooms":
-        if (customRooms.length === 0) {
-          return (
-            <div className="contact-list__empty">
-              <div className="empty-icon">💬</div>
-              <div className="empty-title">No Chat Rooms</div>
-              <div className="empty-subtitle">
-                Create a new room or join existing rooms
-              </div>
-            </div>
-          );
-        }
-        return customRooms.map((room) => (
-          <div
-            key={room.id}
-            className={`contact-item ${
-              selectedRoomId === room.id ? "active" : ""
-            }`}
-            onClick={() => onRoomSelect(room.id)}
-          >
-            <div
-              className="contact-avatar"
-              style={{ backgroundColor: getRandomColor(room.id) }}
-            >
-              {room.avatar || "💬"}
-            </div>
-
-            <div className="contact-info">
-              <div className="contact-name">
-                {room.name}
-                {room.participants?.length > 2 && " 📌"}
-              </div>
-              <div className="contact-message">
-                {room.lastMessage || "No messages"}
-              </div>
-            </div>
-
-            <div className="message-info">
-              <div className="time">
-                {formatTimestamp(room.lastMessageTime)}
-              </div>
-              <Badge
-                count={room.unreadCount}
-                maxCount={99}
-                variant="default"
-                size="medium"
-                customColor="#00b046"
-                className="badge--inline"
-              />
-            </div>
-          </div>
-        ));
+        return (
+          <RoomsTab
+            customRooms={customRooms}
+            onRoomSelect={onRoomSelect}
+            selectedRoomId={selectedRoomId}
+            currentUser={currentUser}
+          />
+        );
 
       case "invitations":
         return (
@@ -113,13 +69,13 @@ const ContactList = ({
   };
 
   return (
-    <div className="contact-list">
-      <div className="contact-list__content">{renderSectionContent()}</div>
+    <div className="sidebar-container">
+      <div className="sidebar-container__content">{renderSectionContent()}</div>
     </div>
   );
 };
 
-ContactList.propTypes = {
+SidebarContainer.propTypes = {
   activeSection: PropTypes.string.isRequired,
   friends: PropTypes.array.isRequired,
   groups: PropTypes.array,
@@ -138,4 +94,4 @@ ContactList.propTypes = {
   sendMessage: PropTypes.func.isRequired,
 };
 
-export default ContactList;
+export default SidebarContainer;

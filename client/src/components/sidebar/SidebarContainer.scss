@@ -1,6 +1,6 @@
 @import "../../styles/colors";
 
-.contact-list {
+.sidebar-container {
   width: 320px;
   background-color: #2b2b2b;
   border-right: 1px solid #333333;
@@ -74,7 +74,7 @@
   }
 }
 
-.contact-item {
+.list-item {
   display: flex;
   align-items: center;
   padding: 8px 20px;
@@ -157,44 +157,44 @@
 }
 
 /* Scrollbar Styles */
-.contact-list__content::-webkit-scrollbar {
+.sidebar-container__content::-webkit-scrollbar {
   width: 6px;
 }
 
-.contact-list__content::-webkit-scrollbar-track {
+.sidebar-container__content::-webkit-scrollbar-track {
   background: #1e1e1e;
 }
 
-.contact-list__content::-webkit-scrollbar-thumb {
+.sidebar-container__content::-webkit-scrollbar-thumb {
   background: #555;
   border-radius: 3px;
 }
 
-.contact-list__content::-webkit-scrollbar-thumb:hover {
+.sidebar-container__content::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
 
 /* Responsive Design */
 @media (max-width: 1200px) {
-  .contact-list {
+  .sidebar-container {
     width: 280px;
   }
 }
 
 @media (max-width: 992px) {
-  .contact-list {
+  .sidebar-container {
     width: 260px;
   }
 }
 
 @media (max-width: 768px) {
-  .contact-list {
+  .sidebar-container {
     width: 240px;
   }
 }
 
 @media (max-width: 576px) {
-  .contact-list {
+  .sidebar-container {
     display: none;
   }
 }

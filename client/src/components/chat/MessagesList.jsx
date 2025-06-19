@@ -70,7 +70,18 @@ const ChatMainContent = ({
         });
       }
 
-      // Different year
+      // Over one year ago - show full date
+      const oneYearAgo = new Date(today);
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      if (date < oneYearAgo) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+      }
+
+      // Different year but within one year
       return date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
