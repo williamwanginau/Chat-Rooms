@@ -1,16 +1,24 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import MainPage from "./pages/Chat/MainPage.jsx";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
+import ChatDashboard from "./pages/ChatDashboard.jsx";
+import { ChatProvider } from "./contexts/ChatContext.jsx";
 
 function App() {
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <div className="app">
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/chat" element={<MainPage />} />
+          <Route
+            path="/chat"
+            element={
+              <ChatProvider>
+                <ChatDashboard />
+              </ChatProvider>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

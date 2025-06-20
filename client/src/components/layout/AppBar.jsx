@@ -4,8 +4,9 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
+import PropTypes from "prop-types";
 
-function ResponsiveAppBar(children) {
+function ResponsiveAppBar({ currentUser }) {
   const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -19,7 +20,7 @@ function ResponsiveAppBar(children) {
           <Box
             sx={{ marginLeft: "auto", display: "flex", alignItems: "center" }}
           >
-            Hello, {children.currentUser.username}
+            Hello, {currentUser.username}
             <Button
               onClick={handleLogout}
               sx={{
@@ -37,4 +38,11 @@ function ResponsiveAppBar(children) {
     </AppBar>
   );
 }
+
+ResponsiveAppBar.propTypes = {
+  currentUser: PropTypes.shape({
+    username: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 export default ResponsiveAppBar;

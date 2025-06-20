@@ -93,9 +93,7 @@ const ListItem = ({
 
       <div className="list-item__meta">
         {timestamp && variant === "room" && (
-          <div className="list-item__time">
-            {formatTimestamp(timestamp)}
-          </div>
+          <div className="list-item__time">{formatTimestamp(timestamp)}</div>
         )}
         {badge && <div className="list-item__badge">{badge}</div>}
       </div>
@@ -116,7 +114,6 @@ ListItem.propTypes = {
     email: PropTypes.string,
   }).isRequired,
   onClick: PropTypes.func,
-  onSecondaryAction: PropTypes.func,
   variant: PropTypes.oneOf([
     "default",
     "friend",

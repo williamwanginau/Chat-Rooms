@@ -1,198 +1,288 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import useWebSocket from '../hooks/useWebSocket';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
+import useWebSocket from "../hooks/useWebSocket";
+import { useFriends } from "../hooks/useFriends";
+import useRoomsV2 from "../hooks/useRoomsV2";
+import { useRoomNameEditor } from "../hooks/useRoomNameEditor";
+import { useUnreadCounts } from "../hooks/useUnreadCounts";
 
 const ChatContext = createContext();
 
-export const useChat = () => {
+export const useChatContext = () => {
   const context = useContext(ChatContext);
   if (!context) {
-    throw new Error('useChat must be used within a ChatProvider');
+    throw new Error("useChatContext must be used within a ChatProvider");
   }
   return context;
 };
 
 export const ChatProvider = ({ children }) => {
-  const [selectedRoomId, setSelectedRoomId] = useState(null);
-  const [customRooms, setCustomRooms] = useState([]);
-  const [activeSection, setActiveSection] = useState("rooms");
+  const navigate = useNavigate();
 
-  // WebSocket connection
+  // 狀態管理
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [activeSection, setActiveSection] = useState("rooms");
+  const [messages, setMessages] = useState([]);
+
+  // 房間名稱編輯狀態
+  const [isEditingRoomName, setIsEditingRoomName] = useState(false);
+  const [editRoomNameValue, setEditRoomNameValue] = useState("");
+  const roomNameInputRef = useRef(null);
+
+  // 使用者管理
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // 載入當前使用者 - 修正無限循環問題
+  useEffect(() => {
+    const loadCurrentUser = () => {
+      const savedUser = localStorage.getItem("currentUser");
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          setCurrentUser(user);
+        } catch (error) {
+          console.error("Failed to parse current user:", error);
+        }
+      }
+    };
+
+    // 只在 currentUser 為 null 時載入
+    if (!currentUser) {
+      loadCurrentUser();
+    }
+  }, []); // 移除 currentUser 依賴，避免無限循環
+
+  // WebSocket 連接
+  const { sendMessage, joinRoom } = useWebSocket(currentUser);
+
+  // 好友管理
   const {
+    friends,
+    receivedInvitations,
+    sentInvitations,
+    setFriends,
+    setReceivedInvitations,
+    setSentInvitations,
+    handleAcceptInvitation,
+    handleDeclineInvitation,
+    handleCancelInvitation,
+    handleSendInvitation,
+  } = useFriends(currentUser, sendMessage);
+
+  // 房間管理 - 使用新的 V2 hook
+  const {
+    userRooms: customRooms,
+    isLoading: roomsLoading,
+    handleRoomSelect: baseHandleRoomSelect,
+    handleStartChat,
+    handleRoomSettingsUpdated,
+    refreshRooms,
+    dataStats,
+  } = useRoomsV2(
+    currentUser,
+    selectedRoomId,
     messages,
-    setMessages,
-    roomUsers,
-    typingUsers,
     sendMessage,
     joinRoom,
-    leaveRoom,
-    isConnected,
-    connectionError,
-  } = useWebSocket();
+    setMessages
+  );
 
-  // Load custom rooms from localStorage
+  // 計算未讀數量
+  const unreadCounts = useMemo(() => {
+    const counts = {
+      friends: 0,
+      rooms: 0,
+      invitations: receivedInvitations.length,
+    };
+
+    // 計算房間未讀數量
+    counts.rooms = customRooms.reduce((total, room) => {
+      return total + (room.unreadCount || 0);
+    }, 0);
+
+    return counts;
+  }, [customRooms, receivedInvitations.length]);
+
+  // 調試信息 - 顯示新的資料統計
   useEffect(() => {
-    const loadCustomRooms = () => {
-      try {
-        const rooms = JSON.parse(localStorage.getItem('customRooms') || '[]');
-        setCustomRooms(rooms);
-      } catch (error) {
-        console.error('Error loading custom rooms:', error);
-        setCustomRooms([]);
+    if (dataStats && import.meta.env.DEV) {
+      console.log("📊 Room Data Statistics:");
+      console.log("  🏠 Total rooms:", dataStats.totalRooms);
+      console.log("  👤 User rooms:", dataStats.userRoomsCount);
+      console.log("  ⚙️ With settings:", dataStats.userRoomsWithSettings);
+      console.log("  🔄 Needs migration:", dataStats.needsMigration);
+    }
+  }, [dataStats]);
+
+  // 減少調試頻率
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("📊 Data Status:");
+      console.log("  🏠 CustomRooms:", customRooms.length);
+      console.log("  👥 Friends:", friends.length);
+      console.log("  📨 ReceivedInvitations:", receivedInvitations.length);
+      console.log("  📤 SentInvitations:", sentInvitations.length);
+    }
+  }, [
+    customRooms.length,
+    friends.length,
+    receivedInvitations.length,
+    sentInvitations.length,
+  ]);
+
+  // 選中的房間
+  const selectedRoom = useMemo(() => {
+    return (
+      customRooms.find((room) => room.id === selectedRoomId) || {
+        id: selectedRoomId,
+        name: selectedRoomId || "No Room Selected",
+        description: "Select a room to start chatting",
       }
-    };
+    );
+  }, [customRooms, selectedRoomId]);
 
-    loadCustomRooms();
+  // 房間名稱編輯功能
+  const startEditingRoomName = useCallback(() => {
+    if (selectedRoom?.name) {
+      setEditRoomNameValue(selectedRoom.name);
+      setIsEditingRoomName(true);
+      setTimeout(() => {
+        roomNameInputRef.current?.focus();
+      }, 0);
+    }
+  }, [selectedRoom?.name]);
 
-    // Listen for storage changes
-    const handleStorageChange = (e) => {
-      if (e.key === 'customRooms') {
-        loadCustomRooms();
-      }
-    };
+  const saveRoomNameEdit = useCallback(() => {
+    if (editRoomNameValue.trim() && selectedRoom?.id) {
+      // TODO: 實作房間名稱更新邏輯
+      console.log("Saving room name:", editRoomNameValue);
+      setIsEditingRoomName(false);
+      setEditRoomNameValue("");
+    }
+  }, [editRoomNameValue, selectedRoom?.id]);
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('localStorageUpdate', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localStorageUpdate', handleStorageChange);
-    };
+  const cancelRoomNameEdit = useCallback(() => {
+    setIsEditingRoomName(false);
+    setEditRoomNameValue("");
   }, []);
 
-  const selectRoom = (roomId) => {
-    if (selectedRoomId && selectedRoomId !== roomId) {
-      leaveRoom(selectedRoomId);
-    }
-    
-    setSelectedRoomId(roomId);
-    if (roomId) {
-      joinRoom(roomId);
-    }
-  };
+  const handleRoomNameKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") {
+        saveRoomNameEdit();
+      } else if (e.key === "Escape") {
+        cancelRoomNameEdit();
+      }
+    },
+    [saveRoomNameEdit, cancelRoomNameEdit]
+  );
 
-  const createRoom = (roomData) => {
-    const newRoom = {
-      id: Date.now().toString(),
-      ...roomData,
-      createdAt: new Date().toISOString(),
-      participants: [roomData.creatorId],
-      messages: [],
-      unreadCount: 0,
-    };
+  // 事件處理
+  const handleRoomSelect = useCallback(
+    (roomId) => {
+      setSelectedRoomId(roomId);
+      baseHandleRoomSelect(roomId);
+    },
+    [baseHandleRoomSelect]
+  );
 
-    const updatedRooms = [...customRooms, newRoom];
-    setCustomRooms(updatedRooms);
-    localStorage.setItem('customRooms', JSON.stringify(updatedRooms));
+  const handleSectionChange = useCallback((section) => {
+    setActiveSection(section);
+  }, []);
 
-    return newRoom;
-  };
+  const handleSendMessage = useCallback(
+    (messageData) => {
+      if (sendMessage) {
+        sendMessage(messageData);
+      }
+    },
+    [sendMessage]
+  );
 
-  const updateRoom = (roomId, updates) => {
-    const updatedRooms = customRooms.map(room =>
-      room.id === roomId ? { ...room, ...updates } : room
-    );
-    setCustomRooms(updatedRooms);
-    localStorage.setItem('customRooms', JSON.stringify(updatedRooms));
-  };
+  const handleStartChatAndSetActive = useCallback(
+    async (friend) => {
+      const roomId = await handleStartChat(friend);
+      if (roomId) {
+        setSelectedRoomId(roomId);
+        setActiveSection("rooms");
+      }
+    },
+    [handleStartChat]
+  );
 
-  const deleteRoom = (roomId) => {
-    const updatedRooms = customRooms.filter(room => room.id !== roomId);
-    setCustomRooms(updatedRooms);
-    localStorage.setItem('customRooms', JSON.stringify(updatedRooms));
-
-    if (selectedRoomId === roomId) {
-      setSelectedRoomId(null);
-    }
-  };
-
-  const clearMessages = () => {
-    setMessages([]);
-  };
-
-  const generateTestMessages = () => {
-    const testMessages = [
-      {
-        id: Date.now() + 1,
-        content: "Hey everyone! How's the project going?",
-        userId: "user1",
-        username: "Alice",
-        timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        roomId: selectedRoomId,
-      },
-      {
-        id: Date.now() + 2,
-        content: "Making good progress! The new features are looking great.",
-        userId: "user2",
-        username: "Bob",
-        timestamp: new Date(Date.now() - 3000000).toISOString(), // 50 minutes ago
-        roomId: selectedRoomId,
-      },
-      {
-        id: Date.now() + 3,
-        content: "Agreed! The UI improvements are really nice. 👍",
-        userId: "user3",
-        username: "Charlie",
-        timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
-        roomId: selectedRoomId,
-      },
-      {
-        id: Date.now() + 4,
-        content: "Should we schedule a demo for next week?",
-        userId: "user1",
-        username: "Alice",
-        timestamp: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
-        roomId: selectedRoomId,
-      },
-    ];
-
-    setMessages(prev => [...prev, ...testMessages]);
-  };
-
-  const getUnreadCounts = () => {
-    const total = customRooms.reduce((sum, room) => sum + (room.unreadCount || 0), 0);
-    return {
-      total,
-      rooms: customRooms.reduce((acc, room) => {
-        acc[room.id] = room.unreadCount || 0;
-        return acc;
-      }, {}),
-    };
-  };
+  // 房間名稱編輯
+  const {
+    roomNameInputRef: editorRoomNameInputRef,
+    startEditingRoomName: editorStartEditingRoomName,
+    saveRoomNameEdit: editorSaveRoomNameEdit,
+    cancelRoomNameEdit: editorCancelRoomNameEdit,
+    handleRoomNameKeyDown: editorHandleRoomNameKeyDown,
+  } = useRoomNameEditor(selectedRoom, currentUser, handleRoomSettingsUpdated);
 
   const value = {
-    // Room management
+    // 用戶
+    currentUser,
+
+    // 狀態
     selectedRoomId,
-    customRooms,
     activeSection,
-    setActiveSection,
-    selectRoom,
-    createRoom,
-    updateRoom,
-    deleteRoom,
-
-    // Messages
+    selectedRoom,
     messages,
+    roomsLoading,
+
+    // 未讀數量
+    unreadCounts,
+
+    // 好友相關
+    friends,
+    receivedInvitations,
+    sentInvitations,
+
+    // 房間相關
+    customRooms,
+    refreshRooms,
+    dataStats,
+
+    // 房間名稱編輯
+    isEditingRoomName,
+    editRoomNameValue,
+    setEditRoomNameValue,
+    roomNameInputRef,
+    startEditingRoomName,
+    saveRoomNameEdit,
+    cancelRoomNameEdit,
+    handleRoomNameKeyDown,
+
+    // 事件處理
+    handleRoomSelect,
+    handleSectionChange,
+    handleSendMessage,
+    handleStartChatAndSetActive,
+    handleAcceptInvitation,
+    handleDeclineInvitation,
+    handleCancelInvitation,
+    handleSendInvitation,
+    handleRoomSettingsUpdated,
+
+    // 給 DevFunctions 用的 setters
     setMessages,
-    clearMessages,
-    generateTestMessages,
-
-    // WebSocket
-    roomUsers,
-    typingUsers,
     sendMessage,
-    isConnected,
-    connectionError,
-
-    // Utilities
-    getUnreadCounts,
+    setFriends,
+    setReceivedInvitations,
+    setSentInvitations,
+    setCustomRooms: refreshRooms, // 改為使用 refreshRooms
   };
 
-  return (
-    <ChatContext.Provider value={value}>
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
 
 ChatProvider.propTypes = {

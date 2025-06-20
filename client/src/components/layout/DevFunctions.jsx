@@ -1,18 +1,30 @@
 import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { useChatContext } from "../../contexts/ChatContext";
 import "./DevFunctions.scss";
+import MESSAGE_TYPES from "../../../../shared/messageTypes.json";
+import { MockManager } from "../../utils/mock";
+import RoomManager from "../../utils/roomManager";
 
-const DevFunctions = ({ 
-  onGenerateTestMessages, 
-  onClearMessages,
-  onClearFriendsData,
-  onGenerateMockRooms,
-  onRemoveMockRooms,
-  onClearAllRooms
-}) => {
+// All test utility functions are now integrated directly in this component
+
+const DevFunctions = () => {
+  const {
+    setMessages,
+    selectedRoomId,
+    sendMessage,
+    currentUser,
+    setFriends,
+    setReceivedInvitations,
+    setSentInvitations,
+    setCustomRooms,
+    friends,
+    refreshRooms,
+    dataStats,
+  } = useChatContext();
+
+  // 自己管理 open/close 狀態
   const [isOpen, setIsOpen] = useState(false);
   const [availableUsers, setAvailableUsers] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
   const [hasTestData, setHasTestData] = useState(false);
   const [hasMockRooms, setHasMockRooms] = useState(false);
 
@@ -20,26 +32,81 @@ const DevFunctions = ({
     setIsOpen(!isOpen);
   };
 
+  // 新增遷移功能
+  const performMigration = () => {
+    if (!currentUser?.id) {
+      alert("Please login first");
+      return;
+    }
+
+    try {
+      if (RoomManager.needsMigration()) {
+        const result = RoomManager.migrateFromLegacyFormat(currentUser.id);
+        alert(`Migration completed! ${result.migrated} rooms migrated.`);
+        refreshRooms(); // 重新整理房間列表
+      } else {
+        alert("No migration needed or already completed.");
+      }
+    } catch (error) {
+      alert(`Migration failed: ${error.message}`);
+    }
+  };
+
+  const showDataStats = () => {
+    if (!currentUser?.id) {
+      alert("Please login first");
+      return;
+    }
+
+    const stats = RoomManager.getDataStats(currentUser.id);
+    alert(`
+Room Data Statistics:
+- Total rooms: ${stats.totalRooms}
+- User rooms: ${stats.userRoomsCount}  
+- With settings: ${stats.userRoomsWithSettings}
+- Needs migration: ${stats.needsMigration}
+
+Storage Keys:
+- Rooms: ${stats.storageKeys.rooms}
+- User Rooms: ${stats.storageKeys.userRooms}
+    `);
+  };
+
   // Load users and current user from localStorage
   useEffect(() => {
     const loadUsers = () => {
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const current = JSON.parse(localStorage.getItem("currentUser") || "null");
-      const testDataExists = localStorage.getItem("testFriendsAndGroups") === "true";
-      
+      const testDataExists =
+        localStorage.getItem("testFriendsAndGroups") === "true";
+
       // Check if mock rooms exist
-      const customRooms = JSON.parse(localStorage.getItem("customRooms") || "[]");
+      const storedCustomRooms = JSON.parse(
+        localStorage.getItem("customRooms") || "[]"
+      );
       const mockRoomIds = [
-        "private_alice_mock", "private_bob_mock", "private_carol_mock", "private_david_mock", 
-        "private_emma_mock", "private_frank_mock", "private_grace_mock",
-        "group_frontend_team", "group_design_team", "group_project_alpha", 
-        "group_coffee_chat", "group_tech_news", "group_book_club", "group_gaming_squad",
-        "group_workout_buddies", "group_travel_plans", "group_old_school_friends"
+        "private_alice_mock",
+        "private_bob_mock",
+        "private_carol_mock",
+        "private_david_mock",
+        "private_emma_mock",
+        "private_frank_mock",
+        "private_grace_mock",
+        "group_frontend_team",
+        "group_design_team",
+        "group_project_alpha",
+        "group_coffee_chat",
+        "group_tech_news",
+        "group_book_club",
+        "group_gaming_squad",
+        "group_workout_buddies",
+        "group_travel_plans",
+        "group_old_school_friends",
       ];
-      const mockRoomsExist = mockRoomIds.some(id => customRooms.find(room => room.id === id));
-      
+      const mockRoomsExist = mockRoomIds.some((id) =>
+        storedCustomRooms.find((room) => room.id === id)
+      );
+
       setAvailableUsers(users);
-      setCurrentUser(current);
       setHasTestData(testDataExists);
       setHasMockRooms(mockRoomsExist);
     };
@@ -50,163 +117,105 @@ const DevFunctions = ({
     }
 
     const handleStorageChange = (e) => {
-      if (e.key === 'users' || e.key === 'currentUser') {
+      if (e.key === "users" || e.key === "currentUser") {
         loadUsers();
       }
     };
 
     const handleCustomStorageChange = (e) => {
-      if (e.detail.key === 'users' || e.detail.key === 'currentUser') {
+      if (e.detail.key === "users" || e.detail.key === "currentUser") {
         loadUsers();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('localStorageUpdate', handleCustomStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("localStorageUpdate", handleCustomStorageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localStorageUpdate', handleCustomStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "localStorageUpdate",
+        handleCustomStorageChange
+      );
     };
   }, [isOpen]);
 
   const handleSwitchUser = (selectedUser) => {
     localStorage.setItem("currentUser", JSON.stringify(selectedUser));
-    setCurrentUser(selectedUser);
-    
-    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
-      detail: { key: 'currentUser', newValue: JSON.stringify(selectedUser) }
-    }));
-    
+
+    window.dispatchEvent(
+      new CustomEvent("localStorageUpdate", {
+        detail: { key: "currentUser", newValue: JSON.stringify(selectedUser) },
+      })
+    );
+
     // Refresh page to apply user switch
     window.location.reload();
   };
 
   const clearAllData = () => {
-    if (!confirm('This will clear all chat records, friends, and invitation data. Are you sure you want to continue?')) {
+    if (
+      !confirm(
+        "This will clear all chat records, friends, and invitation data. Are you sure you want to continue?"
+      )
+    ) {
       return;
     }
-    
+
     try {
       // Clear friends and invitations
-      localStorage.removeItem('friendships');
-      localStorage.removeItem('sentInvitations');
-      localStorage.removeItem('receivedInvitations');
-      localStorage.removeItem('friends');
-      
+      localStorage.removeItem("friendships");
+      localStorage.removeItem("sentInvitations");
+      localStorage.removeItem("receivedInvitations");
+      localStorage.removeItem("friends");
+
       // Clear users' friends lists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.map(user => ({
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const updatedUsers = users.map((user) => ({
         ...user,
-        friends: []
+        friends: [],
       }));
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+
       // Clear messages and rooms
-      onClearMessages();
-      if (onClearFriendsData) {
-        onClearFriendsData();
-      }
-      
-      window.dispatchEvent(new CustomEvent('friendshipsCleared'));
-      alert('All data has been cleared');
+      setMessages([]);
+      setFriends([]);
+      setReceivedInvitations([]);
+      setSentInvitations([]);
+      setCustomRooms([]);
+
+      window.dispatchEvent(new CustomEvent("friendshipsCleared"));
+      alert("All data has been cleared");
     } catch (error) {
-      console.error('Error clearing data:', error);
-      alert('Error occurred while clearing data');
-    }
-  };
-
-  const generateTestFriendsAndGroups = () => {
-    try {
-      // Generate test friends
-      const testFriends = [
-        { id: "friend1", name: "Alice Johnson", username: "alice_j", avatar: "👩", status: "Available for chat" },
-        { id: "friend2", name: "Bob Smith", username: "bob_smith", avatar: "👨", status: "Working from home" },
-        { id: "friend3", name: "Carol Davis", username: "carol_d", avatar: "👩‍💼", status: "In a meeting" },
-        { id: "friend4", name: "David Wilson", username: "david_w", avatar: "👨‍💻", status: "Coding away" },
-        { id: "friend5", name: "Emma Brown", username: "emma_b", avatar: "👩‍🎨", status: "Designing" },
-        { id: "friend6", name: "Frank Miller", username: "frank_m", avatar: "👨‍🔧", status: "Fixing things" },
-        { id: "friend7", name: "Grace Lee", username: "grace_l", avatar: "👩‍🏫", status: "Teaching" },
-        { id: "friend8", name: "Henry Taylor", username: "henry_t", avatar: "👨‍⚕️", status: "Helping patients" },
-        { id: "friend9", name: "Ivy Chen", username: "ivy_c", avatar: "👩‍🔬", status: "In the lab" },
-        { id: "friend10", name: "Jack Anderson", username: "jack_a", avatar: "👨‍🚀", status: "Exploring space" }
-      ];
-
-      // Generate test groups
-      const testGroups = [
-        { id: "group1", name: "Frontend Developers", description: "React, Vue, Angular discussions", avatar: "💻", lastMessage: "New component library released!" },
-        { id: "group2", name: "Design Team", description: "UI/UX design collaboration", avatar: "🎨", lastMessage: "Please review the new mockups" },
-        { id: "group3", name: "Project Alpha", description: "Alpha project coordination", avatar: "🚀", lastMessage: "Sprint planning tomorrow at 10 AM" },
-        { id: "group4", name: "Coffee Chat", description: "Casual conversations", avatar: "☕", lastMessage: "Anyone up for coffee break?" },
-        { id: "group5", name: "Tech News", description: "Latest technology updates", avatar: "📱", lastMessage: "New JavaScript features announced" },
-        { id: "group6", name: "Book Club", description: "Monthly book discussions", avatar: "📚", lastMessage: "Next book: Clean Code" },
-        { id: "group7", name: "Gaming Squad", description: "After-work gaming sessions", avatar: "🎮", lastMessage: "Raid tonight at 8 PM?" }
-      ];
-
-      // Store test data
-      localStorage.setItem("testFriends", JSON.stringify(testFriends));
-      localStorage.setItem("testGroups", JSON.stringify(testGroups));
-      localStorage.setItem("testFriendsAndGroups", "true");
-      setHasTestData(true);
-      
-      alert(`Generated ${testFriends.length} test friends and ${testGroups.length} test groups!`);
-      
-      // Trigger a custom event to notify other components
-      window.dispatchEvent(new CustomEvent('testDataGenerated', {
-        detail: { friends: testFriends, groups: testGroups }
-      }));
-      
-    } catch (error) {
-      console.error('Error generating test data:', error);
-      alert('Error occurred while generating test data');
-    }
-  };
-
-  const removeTestFriendsAndGroups = () => {
-    try {
-      localStorage.removeItem("testFriends");
-      localStorage.removeItem("testGroups");
-      localStorage.removeItem("testFriendsAndGroups");
-      setHasTestData(false);
-      
-      alert('Test friends and groups removed!');
-      
-      // Trigger a custom event to notify other components
-      window.dispatchEvent(new CustomEvent('testDataRemoved'));
-      
-    } catch (error) {
-      console.error('Error removing test data:', error);
-      alert('Error occurred while removing test data');
-    }
-  };
-
-  const toggleTestData = () => {
-    if (hasTestData) {
-      removeTestFriendsAndGroups();
-    } else {
-      generateTestFriendsAndGroups();
+      console.error("Error clearing data:", error);
+      alert("Error occurred while clearing data");
     }
   };
 
   const handleGenerateMockRooms = () => {
     try {
-      const result = onGenerateMockRooms();
+      const result = MockManager.generateAndAddMockRooms(
+        currentUser,
+        setCustomRooms
+      );
       setHasMockRooms(true);
-      alert(`Generated ${result.privateCount} private chats and ${result.groupCount} group chats!`);
+      alert(
+        `Generated ${result.privateCount} private chats and ${result.groupCount} group chats!`
+      );
     } catch (error) {
-      console.error('Error generating mock rooms:', error);
-      alert('Error occurred while generating mock rooms');
+      console.error("Error generating mock rooms:", error);
+      alert("Error occurred while generating mock rooms");
     }
   };
 
   const handleRemoveMockRooms = () => {
     try {
-      onRemoveMockRooms();
+      MockManager.removeMockRooms(setCustomRooms);
       setHasMockRooms(false);
-      alert('Mock chat rooms removed!');
+      alert("Mock chat rooms removed!");
     } catch (error) {
-      console.error('Error removing mock rooms:', error);
-      alert('Error occurred while removing mock rooms');
+      console.error("Error removing mock rooms:", error);
+      alert("Error occurred while removing mock rooms");
     }
   };
 
@@ -219,113 +228,109 @@ const DevFunctions = ({
   };
 
   return (
-    <div className={`dev-functions ${isOpen ? "dev-functions--open" : ""}`}>
-      <button 
-        className="dev-functions__toggle"
-        onClick={togglePanel}
-        title="Developer Functions"
-      >
-        🛠️ Dev
+    <div className="dev-functions">
+      {/* Toggle Button */}
+      <button className="dev-functions__toggle" onClick={togglePanel}>
+        🛠️ Dev Tools
       </button>
-      
+
+      {/* Panel */}
       {isOpen && (
         <div className="dev-functions__panel">
           <div className="dev-functions__header">
-            <h3>Dev Functions</h3>
+            <h3>🛠️ Developer Functions</h3>
+            <button
+              className="dev-functions__close"
+              onClick={() => setIsOpen(false)}
+            >
+              ×
+            </button>
           </div>
-          
+
           <div className="dev-functions__content">
+            {/* Room Management Section */}
             <div className="dev-functions__section">
-              <h4>👤 User Management</h4>
-              <div className="dev-functions__user-selector">
-                <label htmlFor="user-select">Switch User Identity:</label>
-                {currentUser && (
-                  <p className="dev-functions__current-user">
-                    Current User: <strong>{currentUser.username}</strong> (ID: {currentUser.id})
-                  </p>
-                )}
-                <select 
-                  id="user-select"
-                  className="dev-functions__select"
-                  value={currentUser?.id || ""}
-                  onChange={(e) => {
-                    const selectedUser = availableUsers.find(user => user.id === e.target.value);
-                    if (selectedUser) {
-                      handleSwitchUser(selectedUser);
-                    }
-                  }}
-                >
-                  <option value="">Select User...</option>
-                  {availableUsers.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.username} (ID: {user.id})
-                    </option>
-                  ))}
-                </select>
+              <h4>🏠 Room Management</h4>
+              <button
+                onClick={performMigration}
+                className="dev-functions__button"
+              >
+                📦 Migrate to New Format
+              </button>
+              <button onClick={showDataStats} className="dev-functions__button">
+                📊 Show Data Stats
+              </button>
+              <button onClick={refreshRooms} className="dev-functions__button">
+                🔄 Refresh Rooms
+              </button>
+            </div>
+
+            {/* Mock Data Section */}
+            <div className="dev-functions__section">
+              <h4>🎭 Mock Data</h4>
+              <button
+                onClick={toggleMockRooms}
+                className={`dev-functions__button ${
+                  hasMockRooms ? "dev-functions__button--success" : ""
+                }`}
+              >
+                {hasMockRooms
+                  ? "🗑️ Remove Mock Rooms"
+                  : "🏠 Generate Mock Rooms"}
+              </button>
+              <div className="dev-functions__info">
+                {hasMockRooms
+                  ? "Mock rooms are currently loaded"
+                  : "No mock rooms loaded"}
               </div>
             </div>
 
+            {/* Debug Info */}
+            {dataStats && import.meta.env.DEV && (
+              <div className="dev-functions__section">
+                <h4>📊 Debug Stats</h4>
+                <div className="dev-functions__info">
+                  <div>Total Rooms: {dataStats.totalRooms}</div>
+                  <div>User Rooms: {dataStats.userRoomsCount}</div>
+                  <div>
+                    Needs Migration: {dataStats.needsMigration ? "Yes" : "No"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* User Management */}
             <div className="dev-functions__section">
-              <h4>💬 Testing</h4>
-              <button 
-                className="dev-functions__button"
-                onClick={onGenerateTestMessages}
-                title="Generate test messages"
-              >
-                📝 Generate Test Messages
-              </button>
-              
-              <button 
-                className={`dev-functions__button ${hasTestData ? 'dev-functions__button--success' : ''}`}
-                onClick={toggleTestData}
-                title={hasTestData ? "Remove test friends and groups" : "Generate test friends and groups"}
-              >
-                {hasTestData ? '🗑️ Remove' : '👥 Generate'} Test Friends & Groups
-              </button>
-              
-              {hasTestData && (
-                <p className="dev-functions__info">
-                  ✅ Test data is active (10 friends, 7 groups)
-                </p>
+              <h4>👤 User Management</h4>
+              {availableUsers.length > 0 && (
+                <div className="dev-functions__user-selector">
+                  <label>Switch User:</label>
+                  <select
+                    className="dev-functions__select"
+                    value={currentUser?.id || ""}
+                    onChange={(e) => {
+                      const selectedUser = availableUsers.find(
+                        (user) => user.id === e.target.value
+                      );
+                      if (selectedUser) {
+                        handleSwitchUser(selectedUser);
+                      }
+                    }}
+                  >
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.username} ({user.name})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="dev-functions__current-user">
+                    Current: <strong>{currentUser?.username}</strong>
+                  </div>
+                </div>
               )}
-
-              <button 
-                className={`dev-functions__button ${hasMockRooms ? 'dev-functions__button--success' : ''}`}
-                onClick={toggleMockRooms}
-                title={hasMockRooms ? "Remove mock chat rooms" : "Generate mock chat rooms"}
-              >
-                {hasMockRooms ? '🗑️ Remove' : '💬 Generate'} Mock Chat Rooms
-              </button>
-              
-              {hasMockRooms && (
-                <p className="dev-functions__info">
-                  ✅ Mock rooms active (7 private, 10 groups)
-                </p>
-              )}
-            </div>
-
-            <div className="dev-functions__section">
-              <h4>🧹 Cleanup</h4>
-              <button 
-                className="dev-functions__button dev-functions__button--danger"
-                onClick={onClearMessages}
-                title="Clear all messages in current room"
-              >
-                🗑️ Clear Messages
-              </button>
-
-              <button 
-                className="dev-functions__button dev-functions__button--danger"
-                onClick={onClearAllRooms}
-                title="Clear all chat rooms"
-              >
-                🗑️ Clear All Rooms
-              </button>
-              
-              <button 
-                className="dev-functions__button dev-functions__button--danger"
+              <button
                 onClick={clearAllData}
-                title="Clear all data including friends and messages"
+                className="dev-functions__button dev-functions__button--danger"
               >
                 🗑️ Clear All Data
               </button>
@@ -335,15 +340,6 @@ const DevFunctions = ({
       )}
     </div>
   );
-};
-
-DevFunctions.propTypes = {
-  onGenerateTestMessages: PropTypes.func.isRequired,
-  onClearMessages: PropTypes.func.isRequired,
-  onClearFriendsData: PropTypes.func,
-  onGenerateMockRooms: PropTypes.func,
-  onRemoveMockRooms: PropTypes.func,
-  onClearAllRooms: PropTypes.func,
 };
 
 export default DevFunctions;

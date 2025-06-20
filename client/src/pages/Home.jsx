@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@mui/material";
-import ResponsiveAppBar from "../AppBar.jsx";
+import ResponsiveAppBar from "../components/layout/AppBar.jsx";
 
 const Home = () => {
   const navigate = useNavigate();

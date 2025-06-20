@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import "./MessagesList.scss";
 import MessageComposer from "./MessageComposer";
-import TypingIndicator from "../../pages/Chat/TypingIndicator";
 import { useEffect, useRef } from "react";
 
 const ChatMainContent = ({
@@ -9,9 +8,6 @@ const ChatMainContent = ({
   currentUser,
   selectedRoom,
   onSendMessage,
-  typingUsers,
-  onTypingStart,
-  onTypingStop,
 }) => {
   const messageListRef = useRef(null);
 
@@ -55,7 +51,7 @@ const ChatMainContent = ({
       // This week (within last 7 days)
       const diffTime = today - date;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays <= 7) {
         return date.toLocaleDateString("en-US", {
           weekday: "long",
@@ -73,11 +69,11 @@ const ChatMainContent = ({
       // Over one year ago - show full date
       const oneYearAgo = new Date(today);
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
+
       if (date < oneYearAgo) {
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
         return `${year}/${month}/${day}`;
       }
 
@@ -192,16 +188,12 @@ const ChatMainContent = ({
             })}
           </div>
         ))}
-
-        <TypingIndicator typingUsers={typingUsers} />
       </div>
 
       <MessageComposer
         currentUser={currentUser}
         selectedRoom={selectedRoom}
         onSendMessage={onSendMessage}
-        onTypingStart={onTypingStart}
-        onTypingStop={onTypingStop}
       />
     </div>
   );
@@ -212,9 +204,6 @@ ChatMainContent.propTypes = {
   currentUser: PropTypes.object.isRequired,
   selectedRoom: PropTypes.object,
   onSendMessage: PropTypes.func,
-  typingUsers: PropTypes.array,
-  onTypingStart: PropTypes.func,
-  onTypingStop: PropTypes.func,
 };
 
 export default ChatMainContent;
